@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- The '/homey.js' script must be included in your settings view to work -->
+    <script
+      type="text/javascript"
+      src="/homey.js"
+      data-origin="settings"
+    ></script>
+  </head>
+  <body>
+    <header class="homey-header">
+      <h1 class="homey-title" data-i18n="settings.title"></h1>
+      <p class="homey-subtitle" data-i18n="settings.subtitle"></p>
+    </header>
+
+    <div class="homey-form-group">
+      <h1 class="homey-title" data-i18n="settings.discover"></h1>
+      <button id="discover" class="homey-button-primary-full" data-i18n="settings.button_discover"></button>
+    </div>
+
+    <fieldset class="homey-form-fieldset">
+      <legend class="homey-form-legend" data-i18n="settings.fieldset_legend"></legend>
+
+      <div class="homey-form-group">
+        <label class="homey-form-label" for="ipAddress" data-i18n="settings.field_ip_address"></label>
+        <input class="homey-form-input" id="ipAddress" type="text" value="" />
+      </div>
+
+      <div  class="homey-form-group">
+        <button id="authenticate" class="homey-button-primary-full" data-i18n="settings.button_authenticate"></button>
+      </div>
+
+      <div class="homey-form-group">
+        <label class="homey-form-label" for="accessToken" data-i18n="settings.field_access_token"></label>
+        <input class="homey-form-input" id="accessToken" type="text" value="" />
+      </div>
+    </fieldset>
+
+    <button id="save" class="homey-button-primary-full">Save changes</button>
+
+    <script type="text/javascript">
+      // a method named 'onHomeyReady' must be present in your code
+      function onHomeyReady(Homey) {
+
+        var accessTokenElement = document.getElementById("accessToken");
+        var ipAddressElement = document.getElementById("ipAddress");
+        var discoverElement = document.getElementById("discover");
+        var authenticateElement = document.getElementById("authenticate");
+        var saveElement = document.getElementById("save");
+
+        Homey.get('accessToken', function (err, accessToken) {
+          if (err) return Homey.alert(err);
+          accessTokenElement.value = accessToken;
+        });
+
+        Homey.get('ipAddress', function (err, ipAddress) {
+          if (err) return Homey.alert(err);
+          ipAddressElement.value = ipAddress;
+        });
+
+        discoverElement.addEventListener("click", function (e) {
+          Homey.api("GET", "/", null, function (err, data) {
+            ipAddressElement.value = data.data;
+          });
+        });
+        authenticateElement.addEventListener("click", function (e) {
+          Homey.alert("Please click the action button on your Dirigera!");
+          Homey.api("POST", "/", {"ip_address": ipAddressElement.value}, function (err, data) {
+            accessTokenElement.value = data.access_token;
+          });
+        });
+        saveElement.addEventListener("click", function (e) {
+          Homey.set("accessToken", accessTokenElement.value, function (err) {
+            if (err) return Homey.alert(err);
+          });
+          Homey.set("ipAddress", ipAddressElement.value, function (err) {
+            if (err) return Homey.alert(err);
+          });
+        });
+
+        // Tell Homey we're ready to be displayed
+        Homey.ready();
+      }
+    </script>
+  </body>
+</html>

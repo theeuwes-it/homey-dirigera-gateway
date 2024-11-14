@@ -1,0 +1,107 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "com.theeuwes-it.ikea.dirigera",
+  "version": "1.0.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "IKEA DIRIGERA Gateway"
+  },
+  "description": {
+    "en": "Control your IKEA DIRIGERA Gateway with Homey"
+  },
+  "category": [
+    "lights"
+  ],
+  "brandColor": "#0058a3",
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Theeuwes-IT",
+    "email": "info@theeuwes-it.com"
+  },
+  "bugs": {
+    "url": "https://github.com/theeuwes-it/homey-dirigera-gateway/issues"
+  },
+  "source": "https://github.com/theeuwes-it/homey-dirigera-gateway",
+  "api": {
+    "discover": {
+      "method": "GET",
+      "path": "/"
+    },
+    "authenticate": {
+      "method": "POST",
+      "path": "/"
+    }
+  },
+  "drivers": [
+    {
+      "name": {
+        "en": "Lights"
+      },
+      "class": "light",
+      "capabilities": [
+        "onoff",
+        "dim",
+        "light_temperature",
+        "light_hue",
+        "light_saturation"
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/light/assets/images/small.png",
+        "large": "/drivers/light/assets/images/large.png"
+      },
+      "id": "light"
+    },
+    {
+      "name": {
+        "en": "Outlets"
+      },
+      "class": "socket",
+      "capabilities": [
+        "onoff"
+      ],
+      "platforms": [
+        "local"
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/outlet/assets/images/small.png",
+        "large": "/drivers/outlet/assets/images/large.png"
+      },
+      "id": "outlet"
+    }
+  ]
+}

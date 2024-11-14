@@ -1,0 +1,21 @@
+{
+  "name": "net.favoretti.ikea.dirigera",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts --ignore-path .gitignore ."
+  },
+  "dependencies": {
+    "dirigera-simple": "^0.1.4",
+    "got": "^13.0.0",
+    "homey-zigbeedriver": "^2.1.0",
+    "lodash.debounce": "^4.0.8"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^16.1.0",
+    "@types/homey": "npm:homey-apps-sdk-v3-types@^0.3.4",
+    "@types/node": "^20.3.2",
+    "eslint": "^7.32.0",
+    "eslint-config-athom": "^3.1.1"
+  }
+}

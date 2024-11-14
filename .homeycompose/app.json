@@ -1,0 +1,43 @@
+{
+  "id": "com.theeuwes-it.ikea.dirigera",
+  "version": "1.0.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "IKEA DIRIGERA Gateway"
+  },
+  "description": {
+    "en": "Control your IKEA DIRIGERA Gateway with Homey"
+  },
+  "category": [
+    "lights"
+  ],
+  "brandColor": "#0058a3",
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Theeuwes-IT",
+    "email": "info@theeuwes-it.com"
+  },
+  "bugs": {
+    "url": "https://github.com/theeuwes-it/homey-dirigera-gateway/issues"
+  },
+  "source": "https://github.com/theeuwes-it/homey-dirigera-gateway",
+  "api": {
+    "discover": {
+      "method": "GET",
+      "path": "/"
+    },
+    "authenticate": {
+      "method": "POST",
+      "path": "/"
+    }
+  }
+}
