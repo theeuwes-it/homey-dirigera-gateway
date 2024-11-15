@@ -17,7 +17,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
       try {
         await this.connect();
       } catch (err) {
-        this.log(err.message);
+        this.log(`Error: ${err.message}`);
       }
     })();
   }
@@ -30,6 +30,20 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     this._dirigera = new Dirigera.Dirigera(this.homey.settings.get('ipAddress'), this.homey.settings.get('accessToken'));
     this._gatewayConnected = true;
     this.log('Connected to DIRIGERA gateway');
+    const self = this;
+    this._dirigera.startListeningForUpdates(
+        async (updateEvent) => {
+          const id = updateEvent.data.id;
+          const driver = self.getDriverForType(updateEvent.data.type)
+          const device = driver?.getDevice({
+            id: id,
+          })
+          const newStatus = await self.getDevice(id);
+          if (device && newStatus) {
+            device.updateCapabilities(newStatus);
+          }
+        },
+    );
   }
 
   isGatewayConnected() {
@@ -54,6 +68,25 @@ class IkeaDirigeraGatewayApp extends Homey.App {
       if (device.id === id) {
         return device;
       }
+    }
+    return null;
+  }
+
+  /*
+   * @returns DirigeraLightDriver
+   */
+  getDriverForType(type) {
+    let driverId = null;
+    switch (type) {
+      case 'light':
+        driverId = 'light';
+        break;
+      case 'outlet':
+        driverId = 'outlet';
+        break;
+    }
+    if (driverId != null) {
+      return this.homey.drivers.getDriver(driverId);
     }
     return null;
   }

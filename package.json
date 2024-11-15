@@ -6,7 +6,7 @@
     "lint": "eslint --ext .js,.ts --ignore-path .gitignore ."
   },
   "dependencies": {
-    "dirigera-simple": "^0.1.4",
+    "dirigera-simple": "git://github.com/theeuwes-it/dirigera-simple.git",
     "got": "^13.0.0",
     "homey-zigbeedriver": "^2.1.0",
     "lodash.debounce": "^4.0.8"
