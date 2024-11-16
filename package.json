@@ -1,6 +1,6 @@
 {
-  "name": "net.favoretti.ikea.dirigera",
-  "version": "1.0.0",
+  "name": "com.theeuwes-it.ikea.dirigera",
+  "version": "1.0.1",
   "main": "app.js",
   "scripts": {
     "lint": "eslint --ext .js,.ts --ignore-path .gitignore ."
