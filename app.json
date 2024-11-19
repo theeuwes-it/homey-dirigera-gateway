@@ -102,6 +102,46 @@
         "large": "/drivers/outlet/assets/images/large.png"
       },
       "id": "outlet"
+    },
+    {
+      "name": {
+        "en": "Roller Blind"
+      },
+      "class": "blinds",
+      "capabilities": [
+        "windowcoverings_tilt_down",
+        "windowcoverings_tilt_set",
+        "windowcoverings_tilt_up",
+        "measure_battery",
+        "alarm_battery"
+      ],
+      "energy": {
+        "batteries": [
+          "OTHER"
+        ]
+      },
+      "platforms": [
+        "local"
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/roller-blind/assets/images/small.png",
+        "large": "/drivers/roller-blind/assets/images/large.png",
+        "xlarge": "/drivers/roller-blind/assets/images/xlarge.png"
+      },
+      "id": "roller-blind"
     }
   ]
 }

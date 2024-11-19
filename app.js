@@ -73,7 +73,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
   }
 
   /*
-   * @returns DirigeraLightDriver
+   * @returns Driver
    */
   getDriverForType(type) {
     let driverId = null;
@@ -83,6 +83,9 @@ class IkeaDirigeraGatewayApp extends Homey.App {
         break;
       case 'outlet':
         driverId = 'outlet';
+        break;
+      case 'blind':
+        driverId = 'roller-blind';
         break;
     }
     if (driverId != null) {
