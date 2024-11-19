@@ -38,7 +38,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
           const device = driver?.getDevice({
             id: id,
           })
-          const newStatus = await self.getDevice(id);
+          const newStatus = await self.getDevice(id).catch(this.handleError);
           if (device && newStatus) {
             device.updateCapabilities(newStatus);
           }
@@ -109,5 +109,8 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     });
   }
 
+  handleError(error) {
+    this.log(error)
+  }
 }
 module.exports = IkeaDirigeraGatewayApp;

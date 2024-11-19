@@ -1,6 +1,6 @@
 {
   "id": "com.theeuwes-it.ikea.dirigera",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -10,7 +10,7 @@
     "en": "IKEA DIRIGERA Gateway"
   },
   "description": {
-    "en": "Control your IKEA DIRIGERA Gateway with Homey"
+    "en": "Simplify your smart home experience and enjoy total control over your lighting and appliances"
   },
   "category": [
     "lights"
