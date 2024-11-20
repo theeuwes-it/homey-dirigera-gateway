@@ -1,8 +1,8 @@
 'use strict';
 
-const Homey = require('homey');
+const DirigeraDevice = require("../DirigeraDevice");
 
-module.exports = class DirigeraOutletDevice extends Homey.Device {
+module.exports = class DirigeraOutletDevice extends DirigeraDevice {
 
   async onInit() {
     this._instanceId = this.getData().id;

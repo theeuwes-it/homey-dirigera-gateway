@@ -1,10 +1,10 @@
 'use strict';
 
-const Homey = require('homey');
+const DirigeraDevice = require("../DirigeraDevice");
 
 const CAPABILITIES_SET_DEBOUNCE = 100;
 
-module.exports = class DirigeraLightDevice extends Homey.Device {
+module.exports = class DirigeraLightDevice extends DirigeraDevice {
 
   async onInit() {
     this._instanceId = this.getData().id;
