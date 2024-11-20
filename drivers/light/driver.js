@@ -1,9 +1,9 @@
 'use strict';
 
-const Homey = require('homey');
 const Utils = require('../../utils');
+const DirigeraDriver = require("../DirigeraDriver");
 
-module.exports = class DirigeraLightDriver extends Homey.Driver {
+module.exports = class DirigeraLightDriver extends DirigeraDriver {
 
   async onInit() {
     this.log('IKEA Dirigera Light Driver has been initialized');

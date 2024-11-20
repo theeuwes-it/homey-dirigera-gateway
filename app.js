@@ -2,6 +2,7 @@
 
 const Homey = require('homey');
 const Dirigera = require('dirigera-simple');
+const DirigeraDevice = require("./drivers/DirigeraDevice");
 
 class IkeaDirigeraGatewayApp extends Homey.App {
 
@@ -25,7 +26,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
   async connect() {
     this._gatewayConnected = false;
     if (this._dirigera != null) {
-      this._dirigera.destroy();
+      this._dirigera.stopListeningForUpdates();
     }
     this._dirigera = new Dirigera.Dirigera(this.homey.settings.get('ipAddress'), this.homey.settings.get('accessToken'));
     this._gatewayConnected = true;
@@ -33,14 +34,18 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     const self = this;
     this._dirigera.startListeningForUpdates(
         async (updateEvent) => {
-          const id = updateEvent.data.id;
-          const driver = self.getDriverForType(updateEvent.data.type)
-          const device = driver?.getDevice({
-            id: id,
-          })
-          const newStatus = await self.getDevice(id).catch(this.handleError);
-          if (device && newStatus) {
-            device.updateCapabilities(newStatus);
+          try {
+            const id = updateEvent.data.id;
+            const driver = self.getDriverForType(updateEvent.data.type)
+            const device = driver?.getDevice({
+              id: id,
+            })
+            const newStatus = await self.getDevice(id).catch(this.handleError);
+            if (device instanceof DirigeraDevice && newStatus) {
+              device.updateCapabilities(newStatus);
+            }
+          } catch (e) {
+            this.log(`Error: ${e.message}`);
           }
         },
     );
@@ -73,7 +78,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
   }
 
   /*
-   * @returns DirigeraLightDriver
+   * @returns DirigeraDriver
    */
   getDriverForType(type) {
     let driverId = null;

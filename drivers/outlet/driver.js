@@ -1,9 +1,9 @@
 'use strict';
 
-const Homey = require('homey');
 const Utils = require('../../utils');
+const DirigeraDriver = require("../DirigeraDriver");
 
-module.exports = class DirigeraOutletDriver extends Homey.Driver {
+module.exports = class DirigeraOutletDriver extends DirigeraDriver {
 
   /**
    * onInit is called when the driver is initialized.
