@@ -12,14 +12,6 @@ module.exports = class DirigeraOutletDriver extends DirigeraDriver {
     this.log('IKEA Dirigera Outlet Driver has been initialized');
   }
 
-  updateCapabilities(device) {
-    for (const device of this.getDevices()) {
-      if (device.getData().id === device.instanceId) {
-        device.updateCapabilities(device);
-      }
-    }
-  }
-
   /**
    * onPairListDevices is called when a user is adding a device
    * and the 'list_devices' view is called.

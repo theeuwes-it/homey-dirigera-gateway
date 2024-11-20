@@ -1,23 +1,15 @@
 'use strict';
 
-const Homey = require('homey');
 const Utils = require("../../utils");
+const DirigeraDriver = require("../DirigeraDriver");
 
-module.exports = class MyDriver extends Homey.Driver {
+module.exports = class MyDriver extends DirigeraDriver {
 
   /**
    * onInit is called when the driver is initialized.
    */
   async onInit() {
     this.log('IKEA Dirigera Roller Blind Driver has been initialized');
-  }
-
-  updateCapabilities(device) {
-    for (const device of this.getDevices()) {
-      if (device.getData().id === device.instanceId) {
-        device.updateCapabilities(device);
-      }
-    }
   }
 
   /**

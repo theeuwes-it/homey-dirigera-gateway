@@ -1,8 +1,10 @@
 'use strict';
 
-const Homey = require('homey');
+const DirigeraDevice = require("../DirigeraDevice");
 
-module.exports = class DirigeraRollerBlindDevice extends Homey.Device {
+const CAPABILITIES_SET_DEBOUNCE = 100;
+
+module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
 
   /**
    * onInit is called when the device is initialized.
@@ -13,10 +15,6 @@ module.exports = class DirigeraRollerBlindDevice extends Homey.Device {
     const device = await this.homey.app.getDevice(this._instanceId);
     this.updateCapabilities(device);
     this.registerMultipleCapabilityListener(this.getCapabilities(), this._onMultipleCapabilityListener.bind(this), CAPABILITIES_SET_DEBOUNCE);
-    this.registerCapabilityListener('windowcoverings_tilt_set', async (value) => {
-      const dirigera = this.homey.app.getDirigera();
-      dirigera.setAttribute(this._instanceId, { 'position': value });
-    })
     this.log(`Dirigera Roller Blind ${this.getName()} has been initialized`);
   }
 

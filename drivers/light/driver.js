@@ -9,14 +9,6 @@ module.exports = class DirigeraLightDriver extends DirigeraDriver {
     this.log('IKEA Dirigera Light Driver has been initialized');
   }
 
-  updateCapabilities(device) {
-    for (const device of this.getDevices()) {
-      if (device.getData().id === device.instanceId) {
-        device.updateCapabilities(device);
-      }
-    }
-  }
-
   async onPairListDevices() {
     if (!this.homey.app.isGatewayConnected()) {
       throw new Error('First go to Settings -> Apps -> IKEA DIRIGERA Gateway to configure.');
