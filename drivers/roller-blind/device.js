@@ -13,6 +13,7 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
     this._instanceId = this.getData().id;
     this._desiredPosition = -1.0;
     const device = await this.homey.app.getDevice(this._instanceId);
+    await this.updateSettings(device);
     this.updateCapabilities(device);
     this.registerMultipleCapabilityListener(this.getCapabilities(), this._onMultipleCapabilityListener.bind(this), CAPABILITIES_SET_DEBOUNCE);
     this.log(`Dirigera Roller Blind ${this.getName()} has been initialized`);

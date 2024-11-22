@@ -1,0 +1,16 @@
+[
+  {
+    "id": "capabilities",
+    "type": "textarea",
+    "label": { "en": "Capabilities" },
+    "value": "",
+    "hint": { "en": "A list of this device's capabilities." }
+  },
+  {
+    "id": "attributes",
+    "type": "textarea",
+    "label": { "en": "Attributes" },
+    "value": "",
+    "hint": { "en": "A list of this device's attributes." }
+  }
+]

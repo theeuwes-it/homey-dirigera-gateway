@@ -28,15 +28,15 @@ module.exports = class DirigeraLightDriver extends DirigeraDriver {
       if (device.capabilities.canReceive.includes('lightLevel')) {
         capabilities.push('dim');
       }
-      // if (device.capabilities.canReceive.includes('colorTemperature')) {
-      //   capabilities.push('light_temperature');
-      // }
-      // if (device.capabilities.canReceive.includes('colorHue')) {
-      //   capabilities.push('light_hue');
-      // }
-      // if (device.capabilities.canReceive.includes('colorSaturation')) {
-      //   capabilities.push('light_saturation');
-      // }
+      if (device.capabilities.canReceive.includes('colorTemperature')) {
+        capabilities.push('light_temperature');
+      }
+      if (device.capabilities.canReceive.includes('colorHue')) {
+        capabilities.push('light_hue');
+      }
+      if (device.capabilities.canReceive.includes('colorSaturation')) {
+        capabilities.push('light_saturation');
+      }
       lights.push({
         data: {
           id: device.id,

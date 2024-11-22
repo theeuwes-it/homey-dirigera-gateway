@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.theeuwes-it.ikea.dirigera",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -71,7 +71,31 @@
         "small": "/drivers/light/assets/images/small.png",
         "large": "/drivers/light/assets/images/large.png"
       },
-      "id": "light"
+      "id": "light",
+      "settings": [
+        {
+          "id": "capabilities",
+          "type": "textarea",
+          "label": {
+            "en": "Capabilities"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's capabilities."
+          }
+        },
+        {
+          "id": "attributes",
+          "type": "textarea",
+          "label": {
+            "en": "Attributes"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's attributes."
+          }
+        }
+      ]
     },
     {
       "name": {
@@ -101,7 +125,31 @@
         "small": "/drivers/outlet/assets/images/small.png",
         "large": "/drivers/outlet/assets/images/large.png"
       },
-      "id": "outlet"
+      "id": "outlet",
+      "settings": [
+        {
+          "id": "capabilities",
+          "type": "textarea",
+          "label": {
+            "en": "Capabilities"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's capabilities."
+          }
+        },
+        {
+          "id": "attributes",
+          "type": "textarea",
+          "label": {
+            "en": "Attributes"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's attributes."
+          }
+        }
+      ]
     },
     {
       "name": {
@@ -141,7 +189,31 @@
         "large": "/drivers/roller-blind/assets/images/large.png",
         "xlarge": "/drivers/roller-blind/assets/images/xlarge.png"
       },
-      "id": "roller-blind"
+      "id": "roller-blind",
+      "settings": [
+        {
+          "id": "capabilities",
+          "type": "textarea",
+          "label": {
+            "en": "Capabilities"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's capabilities."
+          }
+        },
+        {
+          "id": "attributes",
+          "type": "textarea",
+          "label": {
+            "en": "Attributes"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's attributes."
+          }
+        }
+      ]
     }
   ]
 }

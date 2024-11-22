@@ -7,6 +7,7 @@ module.exports = class DirigeraOutletDevice extends DirigeraDevice {
   async onInit() {
     this._instanceId = this.getData().id;
     const device = await this.homey.app.getDevice(this._instanceId);
+    await this.updateSettings(device);
     this.updateCapabilities(device);
     this.registerCapabilityListener('onoff', async (value) => {
       const dirigera = this.homey.app.getDirigera();

@@ -45,7 +45,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
               device.updateCapabilities(newStatus);
             }
           } catch (e) {
-            this.log(`Error: ${e.message}`);
+            this.log(`Error (${updateEvent.data.id}): ${e.message}`);
           }
         },
     );
@@ -118,7 +118,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
   }
 
   handleError(error) {
-    this.log(error)
+    this.log(`Error: ${error}`)
   }
 }
 module.exports = IkeaDirigeraGatewayApp;
