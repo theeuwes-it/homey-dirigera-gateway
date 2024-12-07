@@ -44,6 +44,27 @@
   "drivers": [
     {
       "name": {
+        "en": "hub"
+      },
+      "class": "other",
+      "capabilities": [
+        "onoff",
+        "volume_down",
+        "volume_up"
+      ],
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [],
+      "images": {
+        "small": "/drivers/hub/assets/images/small.png",
+        "large": "/drivers/hub/assets/images/large.png",
+        "xlarge": "/drivers/hub/assets/images/xlarge.png"
+      },
+      "id": "hub"
+    },
+    {
+      "name": {
         "en": "Lights"
       },
       "class": "light",

@@ -1,0 +1,20 @@
+{
+  "name": {
+    "en": "hub"
+  },
+  "class": "other",
+  "capabilities": [
+    "onoff",
+    "volume_down",
+    "volume_up"
+  ],
+  "platforms": [
+    "local"
+  ],
+  "connectivity": [],
+  "images": {
+    "small": "{{driverAssetsPath}}/images/small.png",
+    "large": "{{driverAssetsPath}}/images/large.png",
+    "xlarge": "{{driverAssetsPath}}/images/xlarge.png"
+  }
+}
