@@ -35,6 +35,12 @@
         <label class="homey-form-label" for="accessToken" data-i18n="settings.field_access_token"></label>
         <input class="homey-form-input" id="accessToken" type="text" value="" />
       </div>
+
+      <div class="homey-form-group">
+        <h1 class="homey-title" data-i18n="settings.debugging"></h1>
+        <label class="homey-form-label" for="debugLogging" data-i18n="settings.field_debugging"></label>
+        <input class="homey-form-input" id="debugLogging" type="checkbox" value="" />
+      </div>
     </fieldset>
 
     <button id="save" class="homey-button-primary-full">Save changes</button>
@@ -48,6 +54,7 @@
         var discoverElement = document.getElementById("discover");
         var authenticateElement = document.getElementById("authenticate");
         var saveElement = document.getElementById("save");
+        var debugLoggingElement = document.getElementById("debugLogging")
 
         Homey.get('accessToken', function (err, accessToken) {
           if (err) return Homey.alert(err);
@@ -57,6 +64,10 @@
         Homey.get('ipAddress', function (err, ipAddress) {
           if (err) return Homey.alert(err);
           ipAddressElement.value = ipAddress;
+        });
+        Homey.get('debugLogging', function (err, debugLogging) {
+          if (err) return Homey.alert(err);
+          debugLoggingElement.checked = debugLogging;
         });
 
         discoverElement.addEventListener("click", function (e) {
@@ -77,6 +88,10 @@
           Homey.set("ipAddress", ipAddressElement.value, function (err) {
             if (err) return Homey.alert(err);
           });
+          Homey.set("debugLogging", debugLoggingElement.checked, function (err) {
+            if (err) return Homey.alert(err);
+          });
+          Homey.api("POST", "/setdebugging", {"debug_logging": debugLoggingElement.checked}, function (err, data) {});
         });
 
         // Tell Homey we're ready to be displayed

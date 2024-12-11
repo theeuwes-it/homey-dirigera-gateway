@@ -30,11 +30,14 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     }
     this._dirigera = new Dirigera.Dirigera(this.homey.settings.get('ipAddress'), this.homey.settings.get('accessToken'));
     this._gatewayConnected = true;
+    this._debugLoggingEnabled = this.homey.settings.get('debugLogging');
     this.log('Connected to DIRIGERA gateway');
     const self = this;
     this._dirigera.startListeningForUpdates(
         async (updateEvent) => {
-          this.log(`Update received: ${JSON.stringify(updateEvent)}`);
+          if (this._debugLoggingEnabled) {
+            this.log(`Update received: ${JSON.stringify(updateEvent)}`);
+          }
           try {
             const id = updateEvent.data.id;
             const driver = self.getDriverForType(updateEvent.data.type)
@@ -63,7 +66,9 @@ class IkeaDirigeraGatewayApp extends Homey.App {
   async getDevices() {
     return new Promise((resolve) => {
       this._dirigera.getDeviceList((list) => {
-        this.log(`Device list: ${JSON.stringify(list)}`);
+        if (this._debugLoggingEnabled) {
+          this.log(`Device list: ${JSON.stringify(list)}`);
+        }
         resolve(list);
       });
     });
@@ -117,6 +122,15 @@ class IkeaDirigeraGatewayApp extends Homey.App {
         resolve(data);
       });
     });
+  }
+
+  updateDebugging(debugging) {
+    this._debugLoggingEnabled = debugging;
+    if (debugging) {
+      this.log("Debug logging enabled");
+    } else {
+      this.log("Debug logging disabled");
+    }
   }
 
   handleError(error) {

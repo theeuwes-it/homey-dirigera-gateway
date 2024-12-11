@@ -4,10 +4,10 @@
   },
   "class": "blinds",
   "capabilities": [
-    "windowcoverings_tilt_down",
-    "windowcoverings_tilt_set",
-    "windowcoverings_tilt_up",
-    "measure_battery"
+    "windowcoverings_set",
+    "windowcoverings_closed",
+    "measure_battery",
+    "alarm_battery"
   ],
   "energy": {
     "batteries": ["OTHER"]

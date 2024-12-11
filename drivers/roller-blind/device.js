@@ -11,7 +11,6 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
    */
   async onInit() {
     this._instanceId = this.getData().id;
-    this._desiredPosition = -1.0;
     const device = await this.homey.app.getDevice(this._instanceId);
     await this.updateSettings(device);
     this.updateCapabilities(device);
@@ -30,46 +29,42 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
             .catch(this.error);
       }
 
-      if (this.hasCapability('windowcoverings_tilt_set')) {
-        const value = blind.attributes['blindsCurrentLevel'] / 100
-        if (value === this._desiredPosition) {
-          this._desiredPosition = -1
-        }
-        this.setCapabilityValue('windowcoverings_tilt_set', value)
+      // Blinds level
+      const currentLevel = blind.attributes['blindsCurrentLevel'];
+      if (this.hasCapability('windowcoverings_set')) {
+        this.setCapabilityValue('windowcoverings_set', (100 - currentLevel) / 100)
             .catch(this.error);
       }
+      if (this.hasCapability('windowcoverings_closed')) {
+        this.setCapabilityValue('windowcoverings_closed', currentLevel === 100)
+            .catch(this.error);
+      }
+      // Battery
       if (this.hasCapability('measure_battery')) {
         this.setCapabilityValue('measure_battery', blind.attributes['batteryPercentage'])
             .catch(this.error);
+      }
+      if (this.hasCapability('alarm_battery')) {
+        const currentAlarm = this.getCapabilityValue('alarm_battery');
+        const currentPercentage = blind.attributes['batteryPercentage'];
+        if (currentPercentage < 20 && !currentAlarm) {
+          this.setCapabilityValue('alarm_battery', true)
+              .catch(this.error);
+        } else if (currentPercentage >= 20 && currentAlarm) {
+          this.setCapabilityValue('alarm_battery', false)
+              .catch(this.error);
+        }
       }
     }
   }
 
   async _onMultipleCapabilityListener(valueObj) {
     const dirigera = this.homey.app.getDirigera();
-    const device = await this.homey.app.getDevice(this._instanceId);
     for (const [key, value] of Object.entries(valueObj)) {
-      if (key === 'windowcoverings_tilt_set') {
-        this._desiredPosition = -1 // We don't need to keep track anymore
-        dirigera.setAttribute(this._instanceId, { 'blindsTargetLevel': value * 100 });
-
-      } else if (key === 'windowcoverings_tilt_up') {
-        if (this._desiredPosition === 100) { // Stop movement
-          dirigera.setAttribute(this._instanceId, { 'blindsState': 'stopped', 'blindsTargetLevel': device.attributes['blindsCurrentLevel'] });
-          this._desiredPosition = -1
-        } else {
-          dirigera.setAttribute(this._instanceId, {'blindsTargetLevel': 100});
-          this._desiredPosition = 100
-        }
-
-      } else if (key === 'windowcoverings_tilt_down') {
-        if (this._desiredPosition === 0) { // Stop movement
-          dirigera.setAttribute(this._instanceId, { 'blindsState': 'stopped', 'blindsTargetLevel': device.attributes['blindsCurrentLevel'] });
-          this._desiredPosition = -1
-        } else {
-          dirigera.setAttribute(this._instanceId, {'blindsTargetLevel': 0});
-          this._desiredPosition = 0
-        }
+      if (key === 'windowcoverings_set') {
+        dirigera.setAttribute(this._instanceId, { 'blindsTargetLevel': 100 - (value * 100) });
+      } else if (key === 'windowcoverings_closed') {
+        dirigera.setAttribute(this._instanceId, { 'blindsTargetLevel': value ? 0 : 100 });
       }
     }
     return true;

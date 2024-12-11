@@ -22,5 +22,8 @@
   },
   "1.0.7": {
     "en": "Fix property names for blinds"
+  },
+  "1.0.8": {
+    "en": "Changed blinds controls"
   }
 }

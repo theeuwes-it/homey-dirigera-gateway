@@ -31,14 +31,12 @@ module.exports = class MyDriver extends DirigeraDriver {
 
       const capabilities = [];
       if (device.capabilities.canReceive.includes('blindsTargetLevel')) {
-        capabilities.push('windowcoverings_tilt_set')
-      }
-      if (device.capabilities.canReceive.includes('blindsState')) {
-        capabilities.push('windowcoverings_tilt_down')
-        capabilities.push('windowcoverings_tilt_up')
+        capabilities.push('windowcoverings_set')
+        capabilities.push('windowcoverings_closed')
       }
       if (device.attributes['batteryPercentage']) {
         capabilities.push('measure_battery')
+        capabilities.push('alarm_battery')
       }
 
       blinds.push({

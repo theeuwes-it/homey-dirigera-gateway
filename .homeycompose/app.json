@@ -1,6 +1,6 @@
 {
   "id": "com.theeuwes-it.ikea.dirigera",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -38,6 +38,10 @@
     "authenticate": {
       "method": "POST",
       "path": "/"
+    },
+    "setDebugging": {
+      "method": "POST",
+      "path": "/setdebugging"
     }
   }
 }

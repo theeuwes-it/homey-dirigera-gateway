@@ -5,5 +5,9 @@ module.exports = {
 
     async authenticate({homey, body}) {
         return await homey.app.authenticate(body.ip_address);
+    },
+
+    async setDebugging({homey, body}) {
+        homey.app.updateDebugging(body.debug_logging);
     }
 }

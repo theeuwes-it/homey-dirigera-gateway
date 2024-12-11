@@ -8,6 +8,8 @@
     "field_ip_address": "IP address",
     "button_authenticate": "Authenticate",
     "field_access_token": "Access Token",
+    "debugging": "Debugging",
+    "field_debugging": "Debug logging",
     "button_save": "Save changes"
   }
 }
