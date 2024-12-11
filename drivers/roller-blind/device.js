@@ -31,38 +31,43 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
       }
 
       if (this.hasCapability('windowcoverings_tilt_set')) {
-        const value = blind.attributes['position'] / 100
+        const value = blind.attributes['blindsCurrentLevel'] / 100
         if (value === this._desiredPosition) {
           this._desiredPosition = -1
         }
         this.setCapabilityValue('windowcoverings_tilt_set', value)
             .catch(this.error);
       }
+      if (this.hasCapability('measure_battery')) {
+        this.setCapabilityValue('measure_battery', blind.attributes['batteryPercentage'])
+            .catch(this.error);
+      }
     }
   }
 
-  _onMultipleCapabilityListener(valueObj) {
+  async _onMultipleCapabilityListener(valueObj) {
     const dirigera = this.homey.app.getDirigera();
+    const device = await this.homey.app.getDevice(this._instanceId);
     for (const [key, value] of Object.entries(valueObj)) {
       if (key === 'windowcoverings_tilt_set') {
         this._desiredPosition = -1 // We don't need to keep track anymore
-        dirigera.setAttribute(this._instanceId, { 'position': value * 100 });
+        dirigera.setAttribute(this._instanceId, { 'blindsTargetLevel': value * 100 });
 
       } else if (key === 'windowcoverings_tilt_up') {
         if (this._desiredPosition === 100) { // Stop movement
-          dirigera.setAttribute(this._instanceId, { 'trigger': 1, 'position': Number.NaN });
+          dirigera.setAttribute(this._instanceId, { 'blindsState': 'stopped', 'blindsTargetLevel': device.attributes['blindsCurrentLevel'] });
           this._desiredPosition = -1
         } else {
-          dirigera.setAttribute(this._instanceId, {'position': 100});
+          dirigera.setAttribute(this._instanceId, {'blindsTargetLevel': 100});
           this._desiredPosition = 100
         }
 
       } else if (key === 'windowcoverings_tilt_down') {
         if (this._desiredPosition === 0) { // Stop movement
-          dirigera.setAttribute(this._instanceId, { 'trigger': 1, 'position': Number.NaN });
+          dirigera.setAttribute(this._instanceId, { 'blindsState': 'stopped', 'blindsTargetLevel': device.attributes['blindsCurrentLevel'] });
           this._desiredPosition = -1
         } else {
-          dirigera.setAttribute(this._instanceId, {'position': 0});
+          dirigera.setAttribute(this._instanceId, {'blindsTargetLevel': 0});
           this._desiredPosition = 0
         }
       }

@@ -34,6 +34,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     const self = this;
     this._dirigera.startListeningForUpdates(
         async (updateEvent) => {
+          this.log(`Update received: ${JSON.stringify(updateEvent)}`);
           try {
             const id = updateEvent.data.id;
             const driver = self.getDriverForType(updateEvent.data.type)
@@ -62,6 +63,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
   async getDevices() {
     return new Promise((resolve) => {
       this._dirigera.getDeviceList((list) => {
+        this.log(`Device list: ${JSON.stringify(list)}`);
         resolve(list);
       });
     });
@@ -89,7 +91,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
       case 'outlet':
         driverId = 'outlet';
         break;
-      case 'blind':
+      case 'blinds':
         driverId = 'roller-blind';
         break;
     }

@@ -25,17 +25,20 @@ module.exports = class MyDriver extends DirigeraDriver {
     const devices = await this.homey.app.getDevices();
     const blinds = [];
     for (const device of devices) {
-      if (device.type !== 'blind') {
+      if (device.type !== 'blinds') {
         continue;
       }
 
       const capabilities = [];
-      if (device.capabilities.canReceive.includes('position')) {
+      if (device.capabilities.canReceive.includes('blindsTargetLevel')) {
         capabilities.push('windowcoverings_tilt_set')
       }
-      if (device.capabilities.canReceive.includes('trigger')) {
+      if (device.capabilities.canReceive.includes('blindsState')) {
         capabilities.push('windowcoverings_tilt_down')
         capabilities.push('windowcoverings_tilt_up')
+      }
+      if (device.attributes['batteryPercentage']) {
+        capabilities.push('measure_battery')
       }
 
       blinds.push({
