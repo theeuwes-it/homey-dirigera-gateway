@@ -25,5 +25,8 @@
   },
   "1.0.8": {
     "en": "Changed blinds controls"
+  },
+  "1.0.9": {
+    "en": "Improved authentication flow"
   }
 }

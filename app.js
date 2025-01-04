@@ -115,13 +115,44 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     });
   }
 
-  async authenticate(ipAddress) {
+  async startAuthenticationProcess(ipAddress) {
+    this._authenticate = new Dirigera.AuthenticateV2(ipAddress);
+    const self = this;
     return new Promise((resolve) => {
-      // eslint-disable-next-line no-new
-      new Dirigera.Authenticate(ipAddress, (data) => {
-        resolve(data);
-      });
+      self._authenticate.listener = {
+        hubNotFound() {
+          resolve({success: false, error: 'Hub was not found. Please check the IP address'});
+          self._authenticate = null; // cleanup
+        },
+        pairingError(error) {
+          resolve({success: false, error: error});
+          self._authenticate = null; // cleanup
+        },
+        codeReceived() {
+          resolve({success: true})
+        }
+      };
+      self._authenticate.startAuthProcess();
     });
+  }
+
+  async getAccessToken() {
+    if (this._authenticate == null) {
+      return {success: false, error: 'Authentication flow not started. Please restart the flow.'};
+    }
+    const self = this;
+    return new Promise((resolve) => {
+      self._authenticate.listener = {
+        pairingError(error) {
+          resolve({success: false, error: error});
+        },
+        pairingSucceeded(result) {
+          resolve({success: true, result: result});
+          self._authenticate = null; // cleanup
+        }
+      };
+      self._authenticate.checkForAccessCode();
+    })
   }
 
   updateDebugging(debugging) {

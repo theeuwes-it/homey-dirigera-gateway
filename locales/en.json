@@ -2,13 +2,23 @@
   "settings": {
     "title": "DIRIGERA Settings Page",
     "subtitle": "Please configure your DIRIGERA Gateway",
-    "discover": "Search for your DIRIGERA",
-    "button_discover": "Discover",
-    "fieldset_legend": "DIRIGERA Settings",
+
+    "legend_gateway_settings": "Gateway settings",
+    "title_ip_address": "Click 'Discover' to search for your DIRIGERA Gateway or enter the IP address manually",
     "field_ip_address": "IP address",
+    "button_discover": "Discover",
+
+    "legend_authentication": "Authentication settings",
+    "title_authenticate": "Make sure the IP address is filled before starting the authentication flow.",
     "button_authenticate": "Authenticate",
     "field_access_token": "Access Token",
-    "debugging": "Debugging",
+
+    "title_authenticated": "Gateway authentication success!",
+    "button_restart_authentication": "Restart authentication",
+
+    "title_authentication_error": "Could not authenticate",
+
+    "legend_debugging": "Debugging",
     "field_debugging": "Debug logging",
     "button_save": "Save changes"
   }

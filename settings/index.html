@@ -7,6 +7,32 @@
       src="/homey.js"
       data-origin="settings"
     ></script>
+    <style>
+      .loader {
+        border: 16px solid #f3f3f3; /* Light grey */
+        border-top: 16px solid #3498db; /* Blue */
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        animation: spin 2s linear infinite;
+        position: relative;
+        left: 35%;
+        top: 20px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .homey-title.medium {
+        font-size: medium;
+      }
+    </style>
   </head>
   <body>
     <header class="homey-header">
@@ -14,30 +40,50 @@
       <p class="homey-subtitle" data-i18n="settings.subtitle"></p>
     </header>
 
-    <div class="homey-form-group">
-      <h1 class="homey-title" data-i18n="settings.discover"></h1>
-      <button id="discover" class="homey-button-primary-full" data-i18n="settings.button_discover"></button>
-    </div>
-
     <fieldset class="homey-form-fieldset">
-      <legend class="homey-form-legend" data-i18n="settings.fieldset_legend"></legend>
+      <legend class="homey-form-legend" data-i18n="settings.legend_gateway_settings"></legend>
 
       <div class="homey-form-group">
+        <h3 class="homey-title medium" data-i18n="settings.title_ip_address"></h3>
         <label class="homey-form-label" for="ipAddress" data-i18n="settings.field_ip_address"></label>
         <input class="homey-form-input" id="ipAddress" type="text" value="" />
+        <br />
+        <button id="discover" class="homey-button-primary-full" data-i18n="settings.button_discover"></button>
       </div>
+    </fieldset>
 
-      <div  class="homey-form-group">
+    <fieldset class="homey-form-fieldset">
+      <legend class="homey-form-legend" data-i18n="settings.legend_authentication"></legend>
+
+      <div class="loader" id="div_loading"></div>
+
+      <div class="homey-form-group hidden" id="div_authenticate">
+        <h3 class="homey-title medium" data-i18n="settings.title_authenticate"></h3>
+        <br />
         <button id="authenticate" class="homey-button-primary-full" data-i18n="settings.button_authenticate"></button>
       </div>
 
-      <div class="homey-form-group">
-        <label class="homey-form-label" for="accessToken" data-i18n="settings.field_access_token"></label>
-        <input class="homey-form-input" id="accessToken" type="text" value="" />
+      <div class="homey-form-group hidden" id="div_authenticated">
+        <h3 class="homey-title medium" data-i18n="settings.title_authenticated"></h3>
+        <br />
+        <button id="restart_authentication" class="homey-button-primary-full" data-i18n="settings.button_restart_authentication"></button>
       </div>
 
+      <div class="homey-form-group hidden" id="div_authentication_error">
+        <h3 class="homey-title medium" data-i18n="settings.title_authentication_error"></h3>
+        <p class="homey-subtitle" id="authentication_error"></p>
+      </div>
+
+      <div class="homey-form-group hidden">
+        <label class="homey-form-label hidden" for="accessToken" data-i18n="settings.field_access_token"></label>
+        <input class="homey-form-input hidden" id="accessToken" type="text" value="" />
+      </div>
+    </fieldset>
+
+    <fieldset class="homey-form-fieldset">
+      <legend class="homey-form-legend" data-i18n="settings.legend_debugging"></legend>
+
       <div class="homey-form-group">
-        <h1 class="homey-title" data-i18n="settings.debugging"></h1>
         <label class="homey-form-label" for="debugLogging" data-i18n="settings.field_debugging"></label>
         <input class="homey-form-input" id="debugLogging" type="checkbox" value="" />
       </div>
@@ -49,21 +95,129 @@
       // a method named 'onHomeyReady' must be present in your code
       function onHomeyReady(Homey) {
 
-        var accessTokenElement = document.getElementById("accessToken");
-        var ipAddressElement = document.getElementById("ipAddress");
-        var discoverElement = document.getElementById("discover");
-        var authenticateElement = document.getElementById("authenticate");
-        var saveElement = document.getElementById("save");
-        var debugLoggingElement = document.getElementById("debugLogging")
+        const accessTokenElement = document.getElementById("accessToken");
+        const ipAddressElement = document.getElementById("ipAddress");
+        const discoverElement = document.getElementById("discover");
+        const authenticateElement = document.getElementById("authenticate");
+        const restartAuthenticationElement = document.getElementById("restart_authentication");
+        const saveElement = document.getElementById("save");
+        const debugLoggingElement = document.getElementById("debugLogging");
 
-        Homey.get('accessToken', function (err, accessToken) {
-          if (err) return Homey.alert(err);
-          accessTokenElement.value = accessToken;
-        });
+        const loadingDiv = document.getElementById("div_loading");
+        const authenticationDiv = document.getElementById("div_authenticate");
+        const authenticationSucceededDiv = document.getElementById("div_authenticated");
+        const authenticationErrorDiv = document.getElementById("div_authentication_error");
+        const authenticationErrorText = document.getElementById("authentication_error");
+
+        function showLoading() {
+          const cls = 'hidden';
+          removeClassFromElement(loadingDiv, cls);
+          addClassToElement(authenticationDiv, cls);
+          addClassToElement(authenticationSucceededDiv, cls);
+          addClassToElement(authenticationErrorDiv, cls);
+        }
+
+        function showAuthenticateButton() {
+          const cls = 'hidden';
+          addClassToElement(loadingDiv, cls);
+          removeClassFromElement(authenticationDiv, cls);
+          addClassToElement(authenticationSucceededDiv, cls);
+          addClassToElement(authenticationErrorDiv, cls);
+        }
+
+        function showAuthenticationSucceeded() {
+          const cls = 'hidden';
+          addClassToElement(loadingDiv, cls);
+          addClassToElement(authenticationDiv, cls);
+          removeClassFromElement(authenticationSucceededDiv, cls);
+          addClassToElement(authenticationErrorDiv, cls);
+        }
+
+        function showAuthenticationError(error) {
+          const cls = 'hidden';
+          addClassToElement(loadingDiv, cls);
+          removeClassFromElement(authenticationDiv, cls);
+          addClassToElement(authenticationSucceededDiv, cls);
+          removeClassFromElement(authenticationErrorDiv, cls);
+          authenticationErrorText.innerText = error;
+        }
+
+        function checkConnection() {
+          Homey.api("GET", "/getDevices", null, function (err, data) {
+            if (data.length > 0) {
+              showAuthenticationSucceeded()
+            } else {
+              showAuthenticateButton()
+            }
+          });
+        }
+
+        function startAuthentication() {
+          showLoading();
+          const ipAddress = ipAddressElement.value;
+          Homey.set("ipAddress", ipAddress, function (err) {
+            if (err) return Homey.alert(err);
+          });
+          Homey.api("POST", "/", {"ip_address": ipAddress}, function (err, data) {
+            if (err || data.success === false) {
+              const error = (data.error) ? data.error : err
+              showAuthenticationError(error)
+            } else {
+              getAccessToken();
+            }
+          });
+        }
+
+        function getAccessToken() {
+          Homey.alert("Please click the action button on your Dirigera!");
+
+          Homey.api("POST", "/getAccessToken", {}, function (err, data) {
+            if (err || data.success === false) {
+              const error = (data.error) ? data.error : err
+              showAuthenticationError(error)
+            } else {
+              accessTokenElement.value = data.result.access_token;
+              Homey.set("accessToken", data.result.access_token, function (err) {
+                if (err) return Homey.alert(err);
+              });
+              showAuthenticationSucceeded();
+            }
+          });
+        }
+
+        function regex(cls) {
+          return new RegExp(`(?:^|\\s)${cls}(?!\\S)`)
+        }
+
+        function elementHasClass(element, cls) {
+          return element.className.match(regex(cls))
+        }
+
+        function addClassToElement(element, cls) {
+          if (!elementHasClass(element, cls)) {
+            element.className += ` ${cls}`;
+          }
+        }
+
+        function removeClassFromElement(element, cls) {
+          if (elementHasClass(element, cls)) {
+            element.className = element.className.replace(regex(cls), '')
+          }
+        }
 
         Homey.get('ipAddress', function (err, ipAddress) {
           if (err) return Homey.alert(err);
           ipAddressElement.value = ipAddress;
+          Homey.get('accessToken', function (err, accessToken) {
+            if (err) return Homey.alert(err);
+            accessTokenElement.value = accessToken;
+
+            if (ipAddress && accessToken) {
+              checkConnection();
+            } else {
+              showAuthenticateButton();
+            }
+          });
         });
         Homey.get('debugLogging', function (err, debugLogging) {
           if (err) return Homey.alert(err);
@@ -73,14 +227,20 @@
         discoverElement.addEventListener("click", function (e) {
           Homey.api("GET", "/", null, function (err, data) {
             ipAddressElement.value = data.data;
+            Homey.set("ipAddress", data.data, function (err) {
+              if (err) return Homey.alert(err);
+            });
           });
         });
         authenticateElement.addEventListener("click", function (e) {
-          Homey.alert("Please click the action button on your Dirigera!");
-          Homey.api("POST", "/", {"ip_address": ipAddressElement.value}, function (err, data) {
-            accessTokenElement.value = data.access_token;
+          startAuthentication();
+        });
+        restartAuthenticationElement.addEventListener("click", function (e) {
+          Homey.set("accessToken", null, function (err) {
+            startAuthentication();
           });
         });
+
         saveElement.addEventListener("click", function (e) {
           Homey.set("accessToken", accessTokenElement.value, function (err) {
             if (err) return Homey.alert(err);
@@ -93,6 +253,8 @@
           });
           Homey.api("POST", "/setdebugging", {"debug_logging": debugLoggingElement.checked}, function (err, data) {});
         });
+
+
 
         // Tell Homey we're ready to be displayed
         Homey.ready();
