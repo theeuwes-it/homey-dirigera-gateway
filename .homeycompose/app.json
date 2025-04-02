@@ -1,6 +1,6 @@
 {
   "id": "com.theeuwes-it.ikea.dirigera",
-  "version": "1.0.3",
+  "version": "1.0.9",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -35,9 +35,21 @@
       "method": "GET",
       "path": "/"
     },
-    "authenticate": {
+    "getDevices": {
+      "method": "GET",
+      "path": "/getDevices"
+    },
+    "startAuthenticationProcess": {
       "method": "POST",
       "path": "/"
+    },
+    "getAccessToken": {
+      "method": "POST",
+      "path": "/getAccessToken"
+    },
+    "setDebugging": {
+      "method": "POST",
+      "path": "/setdebugging"
     }
   }
 }

@@ -10,5 +10,23 @@
   },
   "1.0.3": {
     "en": "Crash fix and new outlet icon"
+  },
+  "1.0.4": {
+    "en": "Added Roller Blinds"
+  },
+  "1.0.5": {
+    "en": "Added debug logging"
+  },
+  "1.0.6": {
+    "en": "Typo in the device type"
+  },
+  "1.0.7": {
+    "en": "Fix property names for blinds"
+  },
+  "1.0.8": {
+    "en": "Changed blinds controls"
+  },
+  "1.0.9": {
+    "en": "Improved authentication flow"
   }
 }

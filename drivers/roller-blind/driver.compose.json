@@ -1,0 +1,36 @@
+{
+  "name": {
+    "en": "Roller Blind"
+  },
+  "class": "blinds",
+  "capabilities": [
+    "windowcoverings_set",
+    "windowcoverings_closed",
+    "measure_battery",
+    "alarm_battery"
+  ],
+  "energy": {
+    "batteries": ["OTHER"]
+  },
+  "platforms": [
+    "local"
+  ],
+  "pair": [
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": {
+        "next": "add_devices"
+      }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ],
+  "images": {
+    "small": "{{driverAssetsPath}}/images/small.png",
+    "large": "{{driverAssetsPath}}/images/large.png",
+    "xlarge": "{{driverAssetsPath}}/images/xlarge.png"
+  }
+}

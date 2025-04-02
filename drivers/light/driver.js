@@ -9,14 +9,6 @@ module.exports = class DirigeraLightDriver extends DirigeraDriver {
     this.log('IKEA Dirigera Light Driver has been initialized');
   }
 
-  updateCapabilities(device) {
-    for (const device of this.getDevices()) {
-      if (device.getData().id === device.instanceId) {
-        device.updateCapabilities(device);
-      }
-    }
-  }
-
   async onPairListDevices() {
     if (!this.homey.app.isGatewayConnected()) {
       throw new Error('First go to Settings -> Apps -> IKEA DIRIGERA Gateway to configure.');
@@ -36,15 +28,15 @@ module.exports = class DirigeraLightDriver extends DirigeraDriver {
       if (device.capabilities.canReceive.includes('lightLevel')) {
         capabilities.push('dim');
       }
-      // if (device.capabilities.canReceive.includes('colorTemperature')) {
-      //   capabilities.push('light_temperature');
-      // }
-      // if (device.capabilities.canReceive.includes('colorHue')) {
-      //   capabilities.push('light_hue');
-      // }
-      // if (device.capabilities.canReceive.includes('colorSaturation')) {
-      //   capabilities.push('light_saturation');
-      // }
+      if (device.capabilities.canReceive.includes('colorTemperature')) {
+        capabilities.push('light_temperature');
+      }
+      if (device.capabilities.canReceive.includes('colorHue')) {
+        capabilities.push('light_hue');
+      }
+      if (device.capabilities.canReceive.includes('colorSaturation')) {
+        capabilities.push('light_saturation');
+      }
       lights.push({
         data: {
           id: device.id,

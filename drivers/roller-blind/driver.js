@@ -1,15 +1,15 @@
 'use strict';
 
-const Utils = require('../../utils');
+const Utils = require("../../utils");
 const DirigeraDriver = require("../DirigeraDriver");
 
-module.exports = class DirigeraOutletDriver extends DirigeraDriver {
+module.exports = class MyDriver extends DirigeraDriver {
 
   /**
    * onInit is called when the driver is initialized.
    */
   async onInit() {
-    this.log('IKEA Dirigera Outlet Driver has been initialized');
+    this.log('IKEA Dirigera Roller Blind Driver has been initialized');
   }
 
   /**
@@ -23,17 +23,23 @@ module.exports = class DirigeraOutletDriver extends DirigeraDriver {
     }
 
     const devices = await this.homey.app.getDevices();
-    const outlets = [];
+    const blinds = [];
     for (const device of devices) {
-      if (device.type !== 'outlet') {
+      if (device.type !== 'blinds') {
         continue;
       }
 
       const capabilities = [];
-      if (device.capabilities.canReceive.includes('isOn')) {
-        capabilities.push('onoff');
+      if (device.capabilities.canReceive.includes('blindsTargetLevel')) {
+        capabilities.push('windowcoverings_set')
+        capabilities.push('windowcoverings_closed')
       }
-      outlets.push({
+      if (device.attributes['batteryPercentage']) {
+        capabilities.push('measure_battery')
+        capabilities.push('alarm_battery')
+      }
+
+      blinds.push({
         data: {
           id: device.id,
         },
@@ -41,7 +47,7 @@ module.exports = class DirigeraOutletDriver extends DirigeraDriver {
         name: (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model),
       });
     }
-    return outlets.sort(Utils._compareHomeyDevice);
-  }
 
+    return blinds.sort(Utils._compareHomeyDevice);
+  }
 };

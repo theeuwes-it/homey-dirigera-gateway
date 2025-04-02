@@ -9,6 +9,7 @@ module.exports = class DirigeraLightDevice extends DirigeraDevice {
   async onInit() {
     this._instanceId = this.getData().id;
     const device = await this.homey.app.getDevice(this._instanceId);
+    await this.updateSettings(device);
     this.updateCapabilities(device);
     this.registerMultipleCapabilityListener(this.getCapabilities(), this._onMultipleCapabilityListener.bind(this), CAPABILITIES_SET_DEBOUNCE);
     this.log(`Dirigera Light ${this.getName()} has been initialized`);
@@ -35,20 +36,20 @@ module.exports = class DirigeraLightDevice extends DirigeraDevice {
           .catch(this.error);
       }
 
-      // if (this.hasCapability('light_temperature')) {
-      //   this.setCapabilityValue('light_temperature', light.colorTemperature / 100)
-      //     .catch(this.error);
-      // }
-      //
-      // if (this.hasCapability('light_hue')) {
-      //   this.setCapabilityValue('light_hue', light.hue / 360)
-      //     .catch(this.error);
-      // }
-      //
-      // if (this.hasCapability('light_saturation')) {
-      //   this.setCapabilityValue('light_saturation', light.saturation / 100)
-      //     .catch(this.error);
-      // }
+      if (this.hasCapability('light_temperature')) {
+        this.setCapabilityValue('light_temperature', light.attributes['colorTemperature'] / 100)
+          .catch(this.error);
+      }
+
+      if (this.hasCapability('light_hue')) {
+        this.setCapabilityValue('light_hue', light.attributes['hue'] / 360)
+          .catch(this.error);
+      }
+
+      if (this.hasCapability('light_saturation')) {
+        this.setCapabilityValue('light_saturation', light.attributes['saturation'] / 100)
+          .catch(this.error);
+      }
     }
   }
 
@@ -59,17 +60,13 @@ module.exports = class DirigeraLightDevice extends DirigeraDevice {
         dirigera.setAttribute(this._instanceId, { 'lightLevel': value * 100 });
       } else if (key === 'onoff') {
         dirigera.setAttribute(this._instanceId, { 'isOn': value });
+      } else if (key === 'light_temperature') {
+        dirigera.setAttribute(this._instanceId, { 'colorTemperature': value * 100 });
+      } else if (key === 'light_hue') {
+        dirigera.setAttribute(this._instanceId, { 'colorHue': value * 360 });
+      } else if (key === 'light_saturation') {
+        dirigera.setAttribute(this._instanceId, { 'colorSaturation': value * 100 });
       }
-      // else if (key === 'light_temperature') {
-      //   // commands['colorTemperature'] = value * 100;
-      //   dirigera.setAttribute(this._instanceId, { 'lightLevel': value * 100 });
-      // } else if (key === 'light_hue') {
-      //   // commands['hue'] = value * 360;
-      //   dirigera.setAttribute(this._instanceId, { 'lightLevel': value * 100 });
-      // } else if (key === 'light_saturation') {
-      //   // commands['saturation'] = value * 100;
-      //   dirigera.setAttribute(this._instanceId, { 'lightLevel': value * 100 });
-      // }
     }
     return true;
   }
