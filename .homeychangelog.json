@@ -28,5 +28,8 @@
   },
   "1.0.9": {
     "en": "Improved authentication flow"
+  },
+  "1.0.10": {
+    "en": "Fix for color changing bulbs"
   }
 }

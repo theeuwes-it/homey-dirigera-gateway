@@ -37,6 +37,11 @@ module.exports = class DirigeraLightDriver extends DirigeraDriver {
       if (device.capabilities.canReceive.includes('colorSaturation')) {
         capabilities.push('light_saturation');
       }
+      if (device.capabilities.canReceive.includes('colorTemperature') &&
+          device.capabilities.canReceive.includes('colorHue') &&
+          device.capabilities.canReceive.includes('colorSaturation')) {
+        capabilities.push('light_mode');
+      }
       lights.push({
         data: {
           id: device.id,

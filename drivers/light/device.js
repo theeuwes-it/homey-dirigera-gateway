@@ -26,6 +26,22 @@ module.exports = class DirigeraLightDevice extends DirigeraDevice {
           .catch(this.error);
       }
 
+      this.colorTemperatureMax = light.attributes['colorTemperatureMax'];
+      this.colorTemperatureMin = light.attributes['colorTemperatureMin'];
+
+      const colorMode = light.attributes['colorMode'];
+      let colorModeTemperature = false;
+      let colorModeColor = false;
+      if (colorMode !== undefined) {
+        colorModeTemperature = colorMode === "temperature";
+        colorModeColor = colorMode === "color";
+
+        if (this.hasCapability('light_mode')) {
+          this.setCapabilityValue('light_mode', colorMode)
+              .catch(this.error);
+        }
+      }
+
       if (this.hasCapability('onoff')) {
         this.setCapabilityValue('onoff', light.attributes['isOn'])
           .catch(this.error);
@@ -36,18 +52,22 @@ module.exports = class DirigeraLightDevice extends DirigeraDevice {
           .catch(this.error);
       }
 
-      if (this.hasCapability('light_temperature')) {
-        this.setCapabilityValue('light_temperature', light.attributes['colorTemperature'] / 100)
+      if (this.hasCapability('light_temperature') && colorModeTemperature) {
+        const kelvinCool = Math.max(this.colorTemperatureMin, this.colorTemperatureMax);
+        const kelvinWarm = Math.min(this.colorTemperatureMin, this.colorTemperatureMax);
+        const kelvin = light.attributes['colorTemperature'];
+        const value = 1 - ((kelvin - kelvinWarm) / (kelvinCool - kelvinWarm));
+        this.setCapabilityValue('light_temperature', value)
           .catch(this.error);
       }
 
-      if (this.hasCapability('light_hue')) {
-        this.setCapabilityValue('light_hue', light.attributes['hue'] / 360)
+      if (this.hasCapability('light_hue') && colorModeColor) {
+        this.setCapabilityValue('light_hue', light.attributes['colorHue'] / 360)
           .catch(this.error);
       }
 
-      if (this.hasCapability('light_saturation')) {
-        this.setCapabilityValue('light_saturation', light.attributes['saturation'] / 100)
+      if (this.hasCapability('light_saturation') && colorModeColor) {
+        this.setCapabilityValue('light_saturation', light.attributes['colorSaturation'])
           .catch(this.error);
       }
     }
@@ -61,13 +81,36 @@ module.exports = class DirigeraLightDevice extends DirigeraDevice {
       } else if (key === 'onoff') {
         dirigera.setAttribute(this._instanceId, { 'isOn': value });
       } else if (key === 'light_temperature') {
-        dirigera.setAttribute(this._instanceId, { 'colorTemperature': value * 100 });
-      } else if (key === 'light_hue') {
-        dirigera.setAttribute(this._instanceId, { 'colorHue': value * 360 });
-      } else if (key === 'light_saturation') {
-        dirigera.setAttribute(this._instanceId, { 'colorSaturation': value * 100 });
+        const kelvinCool = Math.max(this.colorTemperatureMin, this.colorTemperatureMax);
+        const kelvinWarm = Math.min(this.colorTemperatureMin, this.colorTemperatureMax);
+
+        const kelvin = kelvinWarm + (1 - value) * (kelvinCool - kelvinWarm);
+        dirigera.setAttribute(this._instanceId, {
+          'colorTemperature': kelvin,
+        });
+        if (this.hasCapability('light_mode')) {
+          this.setCapabilityValue('light_mode', 'temperature')
+              .catch(this.error);
+        }
       }
     }
+
+    // Color
+    const hasHue = "light_hue" in valueObj;
+    const hasSaturation = "light_saturation" in valueObj;
+    if (hasHue && hasSaturation) {
+      const hue = valueObj["light_hue"];
+      const saturation = valueObj["light_saturation"];
+      if (this.hasCapability('light_mode')) {
+        this.setCapabilityValue('light_mode', 'color')
+            .catch(this.error);
+      }
+      dirigera.setAttribute(this._instanceId, {
+        'colorHue': hue * 360,
+        'colorSaturation': saturation,
+      });
+    }
+
     return true;
   }
 
