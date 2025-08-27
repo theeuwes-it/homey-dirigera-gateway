@@ -12,5 +12,13 @@
     "label": { "en": "Attributes" },
     "value": "",
     "hint": { "en": "A list of this device's attributes." }
+  },
+  {
+    "id": "swap_up_down",
+    "type": "checkbox",
+    "label": { "en": "Swap Up/Down" },
+    "value": false,
+    "hint": { "en": "Swap the up and down commands." },
+    "highlight": true
   }
 ]

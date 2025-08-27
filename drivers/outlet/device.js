@@ -11,6 +11,9 @@ module.exports = class DirigeraOutletDevice extends DirigeraDevice {
     this.updateCapabilities(device);
     this.registerCapabilityListener('onoff', async (value) => {
       const dirigera = this.homey.app.getDirigera();
+      if (this.isDebugLoggingEnabled()) {
+        this.log(`${this.getName()} - onoff: Setting outlet state to ${value}`);
+      }
       dirigera.setAttribute(this._instanceId, { 'isOn': value });
     })
     this.log(`Dirigera Outlet ${this.getName()} has been initialized`);

@@ -77,14 +77,23 @@ module.exports = class DirigeraLightDevice extends DirigeraDevice {
     const dirigera = this.homey.app.getDirigera();
     for (const [key, value] of Object.entries(valueObj)) {
       if (key === 'dim') {
+        if (this.isDebugLoggingEnabled()) {
+          this.log(`${this.getName()} - dim: Setting light level to ${value * 100}`);
+        }
         dirigera.setAttribute(this._instanceId, { 'lightLevel': value * 100 });
       } else if (key === 'onoff') {
+        if (this.isDebugLoggingEnabled()) {
+          this.log(`${this.getName()} - onoff: Setting light state to ${value}`);
+        }
         dirigera.setAttribute(this._instanceId, { 'isOn': value });
       } else if (key === 'light_temperature') {
         const kelvinCool = Math.max(this.colorTemperatureMin, this.colorTemperatureMax);
         const kelvinWarm = Math.min(this.colorTemperatureMin, this.colorTemperatureMax);
 
         const kelvin = kelvinWarm + (1 - value) * (kelvinCool - kelvinWarm);
+        if (this.isDebugLoggingEnabled()) {
+          this.log(`${this.getName()} - light_temperature: Setting color temperature to ${kelvin}K`);
+        }
         dirigera.setAttribute(this._instanceId, {
           'colorTemperature': kelvin,
         });

@@ -60,11 +60,29 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
 
   async _onMultipleCapabilityListener(valueObj) {
     const dirigera = this.homey.app.getDirigera();
+    const settings = this.getSettings();
+    const swapUpDown = settings.swap_up_down;
     for (const [key, value] of Object.entries(valueObj)) {
       if (key === 'windowcoverings_set') {
-        dirigera.setAttribute(this._instanceId, { 'blindsTargetLevel': 100 - (value * 100) });
+        let val = 100 - (value * 100);
+        if (swapUpDown) {
+          val = value * 100;
+        }
+
+        if (this.isDebugLoggingEnabled()) {
+          this.log(`${this.getName()} - windowcoverings_set: Setting blinds level to ${val}`);
+        }
+        dirigera.setAttribute(this._instanceId, { 'blindsTargetLevel': val });
       } else if (key === 'windowcoverings_closed') {
-        dirigera.setAttribute(this._instanceId, { 'blindsTargetLevel': value ? 0 : 100 });
+        let val = value ? 0 : 100;
+        if (swapUpDown) {
+          val = value ? 100 : 0;
+        }
+
+        if (this.isDebugLoggingEnabled()) {
+          this.log(`${this.getName()} - windowcoverings_closed: Setting blinds level to ${val}`);
+        }
+        dirigera.setAttribute(this._instanceId, { 'blindsTargetLevel': val });
       }
     }
     return true;

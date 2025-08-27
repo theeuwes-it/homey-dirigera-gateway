@@ -11,4 +11,8 @@ module.exports = class DirigeraDevice extends Homey.Device {
     updateCapabilities(device) {
 
     }
+
+    isDebugLoggingEnabled() {
+        return this.homey.settings.get('debugLogging');
+    }
 }
