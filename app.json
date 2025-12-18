@@ -111,6 +111,57 @@
     },
     {
       "name": {
+        "en": "Motion Sensor"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "alarm_motion"
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/motion-sensor/assets/images/small.png",
+        "large": "/drivers/motion-sensor/assets/images/large.png"
+      },
+      "id": "motion-sensor",
+      "settings": [
+        {
+          "id": "capabilities",
+          "type": "textarea",
+          "label": {
+            "en": "Capabilities"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's capabilities."
+          }
+        },
+        {
+          "id": "attributes",
+          "type": "textarea",
+          "label": {
+            "en": "Attributes"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's attributes."
+          }
+        }
+      ]
+    },
+    {
+      "name": {
         "en": "Outlets"
       },
       "class": "socket",

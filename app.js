@@ -40,12 +40,12 @@ class IkeaDirigeraGatewayApp extends Homey.App {
           }
           try {
             const id = updateEvent.data.id;
-            const driver = self.getDriverForType(updateEvent.data.type)
+            const driver = self.getDriverForType(updateEvent.data.type, updateEvent.data.deviceType);
             const device = driver?.getDevice({
               id: id,
             })
             const newStatus = await self.getDevice(id).catch(this.handleError);
-            if (device instanceof DirigeraDevice && newStatus) {
+            if (device instanceof DirigeraDevice && newStatus !== null) {
               device.updateCapabilities(newStatus);
             }
           } catch (e) {
@@ -67,7 +67,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     return new Promise((resolve) => {
       this._dirigera.getDeviceList((list) => {
         if (this._debugLoggingEnabled) {
-          this.log(`Device list: ${JSON.stringify(list)}`);
+          // this.log(`Device list: ${JSON.stringify(list)}`);
         }
         resolve(list);
       });
@@ -87,7 +87,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
   /*
    * @returns DirigeraDriver
    */
-  getDriverForType(type) {
+  getDriverForType(type, deviceType) {
     let driverId = null;
     switch (type) {
       case 'light':
@@ -98,6 +98,11 @@ class IkeaDirigeraGatewayApp extends Homey.App {
         break;
       case 'blinds':
         driverId = 'roller-blind';
+        break;
+      case 'sensor':
+        if (deviceType === 'motionSensor') {
+          driverId = 'motion-sensor';
+        }
         break;
     }
     if (driverId != null) {
