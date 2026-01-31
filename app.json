@@ -237,6 +237,69 @@
           "highlight": true
         }
       ]
+    },
+    {
+      "name": {
+        "en": "Sensors"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "measure_temperature",
+        "measure_humidity",
+        "measure_pm25",
+        "measure_co2"
+      ],
+      "energy": {
+        "batteries": [
+          "OTHER"
+        ]
+      },
+      "platforms": [
+        "local"
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/sensor/assets/images/small.png",
+        "large": "/drivers/sensor/assets/images/large.png",
+        "xlarge": "/drivers/sensor/assets/images/xlarge.png"
+      },
+      "id": "sensor",
+      "settings": [
+        {
+          "id": "capabilities",
+          "type": "textarea",
+          "label": {
+            "en": "Capabilities"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's capabilities."
+          }
+        },
+        {
+          "id": "attributes",
+          "type": "textarea",
+          "label": {
+            "en": "Attributes"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's attributes."
+          }
+        }
+      ]
     }
   ]
 }

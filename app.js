@@ -99,6 +99,9 @@ class IkeaDirigeraGatewayApp extends Homey.App {
       case 'blinds':
         driverId = 'roller-blind';
         break;
+      case 'sensor':
+        driverId = 'sensor';
+        break;
     }
     if (driverId != null) {
       return this.homey.drivers.getDriver(driverId);
