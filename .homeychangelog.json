@@ -34,5 +34,8 @@
   },
   "1.0.11": {
     "en": "Added ability to swap up and down on the roller blinds; Added additional logging for debugging purposes."
+  },
+  "1.0.12": {
+    "en": "Added motion sensor- and door/window sensor support."
   }
 }

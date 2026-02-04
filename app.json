@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.theeuwes-it.ikea.dirigera",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -56,6 +56,63 @@
   "drivers": [
     {
       "name": {
+        "en": "Door/Window Sensor"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "alarm_contact",
+        "measure_battery"
+      ],
+      "energy": {
+        "batteries": [
+          "AAA"
+        ]
+      },
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/door-window-sensor/assets/images/small.png",
+        "large": "/drivers/door-window-sensor/assets/images/large.png"
+      },
+      "id": "door-window-sensor",
+      "settings": [
+        {
+          "id": "capabilities",
+          "type": "textarea",
+          "label": {
+            "en": "Capabilities"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's capabilities."
+          }
+        },
+        {
+          "id": "attributes",
+          "type": "textarea",
+          "label": {
+            "en": "Attributes"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's attributes."
+          }
+        }
+      ]
+    },
+    {
+      "name": {
         "en": "Lights"
       },
       "class": "light",
@@ -84,6 +141,64 @@
         "large": "/drivers/light/assets/images/large.png"
       },
       "id": "light",
+      "settings": [
+        {
+          "id": "capabilities",
+          "type": "textarea",
+          "label": {
+            "en": "Capabilities"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's capabilities."
+          }
+        },
+        {
+          "id": "attributes",
+          "type": "textarea",
+          "label": {
+            "en": "Attributes"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's attributes."
+          }
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Motion Sensor"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "alarm_motion",
+        "measure_battery"
+      ],
+      "energy": {
+        "batteries": [
+          "AAA",
+          "AAA"
+        ]
+      },
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/motion-sensor/assets/images/small.png",
+        "large": "/drivers/motion-sensor/assets/images/large.png"
+      },
+      "id": "motion-sensor",
       "settings": [
         {
           "id": "capabilities",
