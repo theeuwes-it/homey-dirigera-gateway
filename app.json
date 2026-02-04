@@ -56,6 +56,63 @@
   "drivers": [
     {
       "name": {
+        "en": "Door/Window Sensor"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "alarm_contact",
+        "measure_battery"
+      ],
+      "energy": {
+        "batteries": [
+          "AAA"
+        ]
+      },
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/door-window-sensor/assets/images/small.png",
+        "large": "/drivers/door-window-sensor/assets/images/large.png"
+      },
+      "id": "door-window-sensor",
+      "settings": [
+        {
+          "id": "capabilities",
+          "type": "textarea",
+          "label": {
+            "en": "Capabilities"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's capabilities."
+          }
+        },
+        {
+          "id": "attributes",
+          "type": "textarea",
+          "label": {
+            "en": "Attributes"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's attributes."
+          }
+        }
+      ]
+    },
+    {
+      "name": {
         "en": "Lights"
       },
       "class": "light",
@@ -115,8 +172,15 @@
       },
       "class": "sensor",
       "capabilities": [
-        "alarm_motion"
+        "alarm_motion",
+        "measure_battery"
       ],
+      "energy": {
+        "batteries": [
+          "AAA",
+          "AAA"
+        ]
+      },
       "pair": [
         {
           "id": "list_devices",

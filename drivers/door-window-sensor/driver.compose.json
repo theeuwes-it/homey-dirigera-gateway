@@ -1,15 +1,15 @@
 {
   "name": {
-    "en": "Motion Sensor"
+    "en": "Door/Window Sensor"
   },
   "class": "sensor",
   "capabilities": [
-    "alarm_motion",
+    "alarm_contact",
     "measure_battery"
   ],
   "energy": {
     "batteries": [
-      "AAA", "AAA"
+      "AAA"
     ]
   },
   "pair": [

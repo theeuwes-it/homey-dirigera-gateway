@@ -67,7 +67,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     return new Promise((resolve) => {
       this._dirigera.getDeviceList((list) => {
         if (this._debugLoggingEnabled) {
-          // this.log(`Device list: ${JSON.stringify(list)}`);
+          this.log(`Device list: ${JSON.stringify(list)}`);
         }
         resolve(list);
       });
@@ -102,6 +102,9 @@ class IkeaDirigeraGatewayApp extends Homey.App {
       case 'sensor':
         if (deviceType === 'motionSensor') {
           driverId = 'motion-sensor';
+        }
+        if (deviceType === 'openCloseSensor') {
+          driverId = 'door-window-sensor';
         }
         break;
     }

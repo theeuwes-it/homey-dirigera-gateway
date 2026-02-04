@@ -3,10 +3,10 @@
 const Utils = require('../../utils');
 const DirigeraDriver = require("../DirigeraDriver");
 
-module.exports = class DirigeraMotionSensorDriver extends DirigeraDriver {
+module.exports = class DirigeraDoorWindowSensorDriver extends DirigeraDriver {
 
   async onInit() {
-    this.log('IKEA Dirigera Motion Sensor Driver has been initialized');
+    this.log('IKEA Dirigera Door/Window Sensor Driver has been initialized');
   }
 
   async onPairListDevices() {
@@ -15,17 +15,17 @@ module.exports = class DirigeraMotionSensorDriver extends DirigeraDriver {
     }
 
     const devices = await this.homey.app.getDevices();
-    const motionSensors = [];
+    const doorWindowSensors = [];
     for (const device of devices) {
-      if (device.type !== 'sensor' || device.deviceType !== 'motionSensor') {
+      if (device.type !== 'sensor' || device.deviceType !== 'openCloseSensor') {
         continue;
       }
 
       const capabilities = [
-        'alarm_motion',
+        'alarm_contact',
         'measure_battery'
       ];
-      motionSensors.push({
+      doorWindowSensors.push({
         data: {
           id: device.id,
         },
@@ -33,6 +33,6 @@ module.exports = class DirigeraMotionSensorDriver extends DirigeraDriver {
         name: (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model),
       });
     }
-    return motionSensors.sort(Utils._compareHomeyDevice);
+    return doorWindowSensors.sort(Utils._compareHomeyDevice);
   }
 }
