@@ -37,5 +37,8 @@
   },
   "1.0.12": {
     "en": "Added motion sensor- and door/window sensor support."
+  },
+  "1.0.13": {
+    "en": "Added luminance support for Vallhorn sensors"
   }
 }

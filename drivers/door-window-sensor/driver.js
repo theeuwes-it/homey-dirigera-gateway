@@ -21,13 +21,14 @@ module.exports = class DirigeraDoorWindowSensorDriver extends DirigeraDriver {
         continue;
       }
 
+      const id = this.getIdFromDevice(device);
       const capabilities = [
         'alarm_contact',
         'measure_battery'
       ];
       doorWindowSensors.push({
         data: {
-          id: device.id,
+          id: id,
         },
         capabilities,
         name: (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model),

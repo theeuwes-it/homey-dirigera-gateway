@@ -29,13 +29,14 @@ module.exports = class DirigeraOutletDriver extends DirigeraDriver {
         continue;
       }
 
+      const id = this.getIdFromDevice(device);
       const capabilities = [];
       if (device.capabilities.canReceive.includes('isOn')) {
         capabilities.push('onoff');
       }
       outlets.push({
         data: {
-          id: device.id,
+          id: id,
         },
         capabilities,
         name: (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model),

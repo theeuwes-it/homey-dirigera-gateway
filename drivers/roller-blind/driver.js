@@ -28,7 +28,8 @@ module.exports = class MyDriver extends DirigeraDriver {
       if (device.type !== 'blinds') {
         continue;
       }
-
+      
+      const id = this.getIdFromDevice(device);
       const capabilities = [];
       if (device.capabilities.canReceive.includes('blindsTargetLevel')) {
         capabilities.push('windowcoverings_set')
@@ -41,7 +42,7 @@ module.exports = class MyDriver extends DirigeraDriver {
 
       blinds.push({
         data: {
-          id: device.id,
+          id: id,
         },
         capabilities,
         name: (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model),

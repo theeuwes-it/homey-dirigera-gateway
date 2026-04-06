@@ -39,13 +39,14 @@ class IkeaDirigeraGatewayApp extends Homey.App {
             this.log(`Update received: ${JSON.stringify(updateEvent)}`);
           }
           try {
-            const id = updateEvent.data.id;
-            const driver = self.getDriverForType(updateEvent.data.type, updateEvent.data.deviceType);
-            const device = driver?.getDevice({
-              id: id,
-            })
-            const newStatus = await self.getDevice(id).catch(this.handleError);
+            const device = self.getDeviceFromUpdate(updateEvent);
+            if (device === null) { return }
+            const id = device.getData().id;
+            const newStatus = await self.getDevice(updateEvent.data.id).catch(this.handleError);
             if (device instanceof DirigeraDevice && newStatus !== null) {
+              if (this._debugLoggingEnabled) {
+                this.log(`Updating device ${device.getName()} (${id}) with new status: ${JSON.stringify(newStatus)}`);
+              }
               device.updateCapabilities(newStatus);
             }
           } catch (e) {
@@ -53,6 +54,34 @@ class IkeaDirigeraGatewayApp extends Homey.App {
           }
         },
     );
+  }
+
+  getDeviceFromUpdate(updateEvent) {
+    const id = updateEvent.data.id;
+    const driver = this.getDriverForType(updateEvent.data.type, updateEvent.data.deviceType);
+    let device = null;
+    if (driver != null) {
+      try {
+        device = driver.getDevice({
+          id: id,
+        });
+      } catch (e) {
+        device = null;
+      }
+    }
+    if (!device && typeof id === 'string' && id.includes('_')) {
+      const baseId = id.split('_', 1)[0];
+      if (driver != null) {
+        try {
+          device = driver.getDevice({
+            id: baseId,
+          });
+        } catch (e) {
+          device = null;
+        }
+      }
+    }
+    return device;
   }
 
   isGatewayConnected() {
@@ -107,6 +136,9 @@ class IkeaDirigeraGatewayApp extends Homey.App {
           driverId = 'door-window-sensor';
         }
         break;
+    }
+    if (type == 'unknown' && deviceType === 'lightSensor') {
+      driverId = 'motion-sensor';
     }
     if (driverId != null) {
       return this.homey.drivers.getDriver(driverId);

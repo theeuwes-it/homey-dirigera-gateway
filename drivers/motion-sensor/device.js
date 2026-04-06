@@ -29,6 +29,12 @@ module.exports = class DirigeraMotionSensorDevice extends DirigeraDevice {
             .catch(this.error);
       }
 
+      var illuminance = sensor.attributes['illuminance'];
+      if (illuminance !== undefined) {
+        this.setCapabilityValue('measure_luminance', illuminance)
+            .catch(this.error);
+      }
+
       var batteryLevel = sensor.attributes['batteryPercentage'];
       if (batteryLevel !== undefined) {
         this.setCapabilityValue('measure_battery', batteryLevel)

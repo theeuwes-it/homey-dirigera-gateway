@@ -20,7 +20,8 @@ module.exports = class DirigeraLightDriver extends DirigeraDriver {
       if (device.type !== 'light') {
         continue;
       }
-
+      
+      const id = this.getIdFromDevice(device);
       const capabilities = [];
       if (device.capabilities.canReceive.includes('isOn')) {
         capabilities.push('onoff');
@@ -44,7 +45,7 @@ module.exports = class DirigeraLightDriver extends DirigeraDriver {
       }
       lights.push({
         data: {
-          id: device.id,
+          id: id,
         },
         capabilities,
         name: (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model),

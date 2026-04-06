@@ -21,13 +21,15 @@ module.exports = class DirigeraMotionSensorDriver extends DirigeraDriver {
         continue;
       }
 
+      const id = this.getIdFromDevice(device);
       const capabilities = [
         'alarm_motion',
+        'measure_luminance',
         'measure_battery'
       ];
       motionSensors.push({
         data: {
-          id: device.id,
+          id: id,
         },
         capabilities,
         name: (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model),
