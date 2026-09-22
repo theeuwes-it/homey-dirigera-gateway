@@ -25,7 +25,7 @@ module.exports = class DirigeraMotionSensorDevice extends DirigeraDevice {
 
       var isDetected = sensor.attributes['isDetected'];
       if (isDetected !== undefined) {
-        this.setCapabilityValue('alarm_motion', isDetected)
+        this.setCapabilityValue('alarm_motion', Boolean(isDetected))
             .catch(this.error);
       }
 
