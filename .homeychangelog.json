@@ -49,5 +49,8 @@
   },
   "1.0.16": {
     "en": "Fix for GRILLPLATS outlets; Add energy monitoring to outlets; Fix for auto-reconnecting when IP address or access token changes"
+  },
+  "1.0.17": {
+    "en": "Fixes for reversed blinds and MYGGSPRAY devices"
   }
 }
