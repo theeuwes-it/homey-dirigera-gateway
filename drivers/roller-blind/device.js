@@ -1,6 +1,12 @@
 'use strict';
 
 const DirigeraDevice = require("../DirigeraDevice");
+const {
+  toHomeySet,
+  fromHomeySet,
+  toHomeyClosed,
+  fromHomeyClosed,
+} = require("./position");
 
 const CAPABILITIES_SET_DEBOUNCE = 100;
 
@@ -18,6 +24,10 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
     this.log(`Dirigera Roller Blind ${this.getName()} has been initialized`);
   }
 
+  swapUpDown() {
+    return Boolean(this.getSettings().swap_up_down);
+  }
+
   updateCapabilities(blind) {
     if (typeof blind !== 'undefined') {
 
@@ -29,15 +39,21 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
             .catch(this.error);
       }
 
-      // Blinds level
+      const swapUpDown = this.swapUpDown();
       const currentLevel = blind.attributes['blindsCurrentLevel'];
       if (this.hasCapability('windowcoverings_set')) {
-        this.setCapabilityValue('windowcoverings_set', (100 - currentLevel) / 100)
-            .catch(this.error);
+        const setValue = toHomeySet(currentLevel, swapUpDown);
+        if (setValue !== null) {
+          this.setCapabilityValue('windowcoverings_set', setValue)
+              .catch(this.error);
+        }
       }
       if (this.hasCapability('windowcoverings_closed')) {
-        this.setCapabilityValue('windowcoverings_closed', currentLevel === 100)
-            .catch(this.error);
+        const closed = toHomeyClosed(currentLevel, swapUpDown);
+        if (closed !== null) {
+          this.setCapabilityValue('windowcoverings_closed', closed)
+              .catch(this.error);
+        }
       }
       // Battery
       if (this.hasCapability('measure_battery')) {
@@ -60,24 +76,18 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
 
   async _onMultipleCapabilityListener(valueObj) {
     const dirigera = this.homey.app.getDirigera();
-    const settings = this.getSettings();
-    const swapUpDown = settings.swap_up_down;
+    const swapUpDown = this.swapUpDown();
     for (const [key, value] of Object.entries(valueObj)) {
       if (key === 'windowcoverings_set') {
-        let val = 100 - (value * 100);
-        if (swapUpDown) {
-          val = value * 100;
-        }
+        const val = fromHomeySet(value, swapUpDown);
+        if (val === null) continue;
 
         if (this.isDebugLoggingEnabled()) {
           this.log(`${this.getName()} - windowcoverings_set: Setting blinds level to ${val}`);
         }
         dirigera.setAttribute(this._instanceId, { 'blindsTargetLevel': val });
       } else if (key === 'windowcoverings_closed') {
-        let val = value ? 0 : 100;
-        if (swapUpDown) {
-          val = value ? 100 : 0;
-        }
+        const val = fromHomeyClosed(value, swapUpDown);
 
         if (this.isDebugLoggingEnabled()) {
           this.log(`${this.getName()} - windowcoverings_closed: Setting blinds level to ${val}`);

@@ -351,7 +351,7 @@
           },
           "value": false,
           "hint": {
-            "en": "Swap the up and down commands."
+            "en": "Invert Homey open/close and position relative to the IKEA app. Leave off unless this blind is mounted or reported the opposite way."
           },
           "highlight": true
         }
