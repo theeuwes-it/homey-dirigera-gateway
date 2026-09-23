@@ -3,6 +3,7 @@
 const Homey = require('homey');
 const Dirigera = require('dirigera-simple');
 const DirigeraDevice = require("./drivers/DirigeraDevice");
+const Utils = require('./utils');
 
 class IkeaDirigeraGatewayApp extends Homey.App {
 
@@ -126,12 +127,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
 
   async getDevice(id) {
     const devices = await this.getDevices();
-    for (const device of devices) {
-      if (device.id === id || device.relationId === id) {
-        return device;
-      }
-    }
-    return null;
+    return Utils.selectDirigeraDevice(devices, id);
   }
 
   /*
