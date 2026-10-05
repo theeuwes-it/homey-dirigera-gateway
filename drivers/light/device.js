@@ -16,7 +16,7 @@ module.exports = class DirigeraLightDevice extends DirigeraDevice {
   }
 
   updateCapabilities(light) {
-    if (typeof light !== 'undefined') {
+    if (typeof light !== 'undefined' && light !== null) {
 
       if (light.isReachable) {
         this.setAvailable()

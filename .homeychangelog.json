@@ -52,5 +52,8 @@
   },
   "1.0.17": {
     "en": "Fixes for reversed blinds and MYGGSPRAY devices"
+  },
+  "1.0.18": {
+    "en": "Fixes for GRILLPLATS outlets, and missing lights"
   }
 }

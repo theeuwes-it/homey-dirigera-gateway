@@ -10,14 +10,23 @@ module.exports = class DirigeraOutletDevice extends DirigeraDevice {
     await this.updateSettings(device);
     this._realId = device ? device.id : this._instanceId;
 
-    const newCaps = ['measure_power', 'measure_voltage', 'measure_current', 'meter_power'];
-    for (const cap of newCaps) {
-      if (!this.hasCapability(cap)) {
-        await this.addCapability(cap).catch(this.error);
+    const related = await this.homey.app.getRelatedDevices(this._instanceId);
+
+    // Only outlets with an electricalSensor endpoint (e.g. GRILLPLATS) measure
+    // energy; plain outlets such as the TRADFRI control outlet do not. Skip when
+    // the device is missing from the gateway, as we can't tell which kind it is.
+    const hasEnergy = related.some(d => d.deviceType === 'electricalSensor');
+    if (device != null) {
+      const energyCaps = ['measure_power', 'measure_voltage', 'measure_current', 'meter_power'];
+      for (const cap of energyCaps) {
+        if (hasEnergy && !this.hasCapability(cap)) {
+          await this.addCapability(cap).catch(this.error);
+        } else if (!hasEnergy && this.hasCapability(cap)) {
+          await this.removeCapability(cap).catch(this.error);
+        }
       }
     }
 
-    const related = await this.homey.app.getRelatedDevices(this._instanceId);
     this.updateCapabilities(device, related);
 
     this.registerCapabilityListener('onoff', async (value) => {
@@ -28,15 +37,17 @@ module.exports = class DirigeraOutletDevice extends DirigeraDevice {
       dirigera.setAttribute(this._realId, { 'isOn': value });
     })
 
-    this._pollInterval = this.homey.setInterval(async () => {
-      try {
-        const freshDevice = await this.homey.app.getDevice(this._instanceId);
-        const freshRelated = await this.homey.app.getRelatedDevices(this._instanceId);
-        this.updateCapabilities(freshDevice, freshRelated);
-      } catch (err) {
-        this.error('Poll refresh failed:', err);
-      }
-    }, 60000);
+    if (hasEnergy) {
+      this._pollInterval = this.homey.setInterval(async () => {
+        try {
+          const freshDevice = await this.homey.app.getDevice(this._instanceId);
+          const freshRelated = await this.homey.app.getRelatedDevices(this._instanceId);
+          this.updateCapabilities(freshDevice, freshRelated);
+        } catch (err) {
+          this.error('Poll refresh failed:', err);
+        }
+      }, 60000);
+    }
 
     this.log(`Dirigera Outlet ${this.getName()} has been initialized`);
   }
