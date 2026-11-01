@@ -56,6 +56,77 @@
   "drivers": [
     {
       "name": {
+        "en": "ALPSTUGA Air Quality Monitor"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "measure_co2",
+        "measure_pm25",
+        "measure_temperature",
+        "measure_humidity"
+      ],
+      "capabilitiesOptions": {
+        "measure_co2": {
+          "decimals": 0
+        },
+        "measure_pm25": {
+          "decimals": 0
+        },
+        "measure_temperature": {
+          "decimals": 1
+        },
+        "measure_humidity": {
+          "decimals": 0
+        }
+      },
+      "connectivity": [
+        "lan"
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/air-quality-sensor/assets/images/small.png",
+        "large": "/drivers/air-quality-sensor/assets/images/large.png"
+      },
+      "id": "air-quality-sensor",
+      "settings": [
+        {
+          "id": "capabilities",
+          "type": "textarea",
+          "label": {
+            "en": "Capabilities"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's capabilities."
+          }
+        },
+        {
+          "id": "attributes",
+          "type": "textarea",
+          "label": {
+            "en": "Attributes"
+          },
+          "value": "",
+          "hint": {
+            "en": "A list of this device's attributes."
+          }
+        }
+      ]
+    },
+    {
+      "name": {
         "en": "Door/Window Sensor"
       },
       "class": "sensor",
