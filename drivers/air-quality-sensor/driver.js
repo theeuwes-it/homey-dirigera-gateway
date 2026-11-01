@@ -7,7 +7,7 @@ module.exports = class DirigeraAirQualitySensorDriver extends DirigeraDriver {
 
   async onPairListDevices() {
     if (!this.homey.app.isGatewayConnected()) {
-      throw new Error('First go to Settings -> Apps -> IKEA DIRIGERA Gateway to configure.');
+      throw new Error(this.homey.__('air_quality_sensor.gateway_not_configured'));
     }
 
     const devices = await this.homey.app.getDevices();

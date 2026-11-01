@@ -1,4 +1,8 @@
 {
+  "air_quality_sensor": {
+    "gateway_not_configured": "First go to Settings → Apps → IKEA DIRIGERA Gateway to configure the gateway.",
+    "unavailable": "The device is temporarily unavailable."
+  },
   "settings": {
     "title": "DIRIGERA Settings Page",
     "subtitle": "Please configure your DIRIGERA Gateway",

@@ -20,7 +20,7 @@ module.exports = class DirigeraAirQualitySensorDevice extends DirigeraDevice {
 
   async updateCapabilities(sensor) {
     if (!sensor || !sensor.isReachable) {
-      await this.setUnavailable('(temporary) unavailable').catch(this.error);
+      await this.setUnavailable(this.homey.__('air_quality_sensor.unavailable')).catch(this.error);
       return;
     }
     await this.setAvailable().catch(this.error);

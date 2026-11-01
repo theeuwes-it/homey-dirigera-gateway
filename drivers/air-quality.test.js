@@ -3,6 +3,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const Module = require('node:module');
+const fs = require('node:fs');
+const path = require('node:path');
 
 // The SDK is provided by Homey at runtime. Keep gateway/network access outside
 // these tests, while exercising the real app, base classes, driver and device.
@@ -50,17 +52,24 @@ function alpstuga(overrides = {}) {
   };
 }
 
-function driverFor(devices, connected = true) {
+function translate(language, key) {
+  const value = (locale) => key.split('.').reduce((current, part) => current && current[part], locale);
+  const filename = path.join(__dirname, '..', 'locales', `${language}.json`);
+  const locale = fs.existsSync(filename) ? JSON.parse(fs.readFileSync(filename, 'utf8')) : {};
+  return value(locale) || value(require('../locales/en.json')) || key;
+}
+
+function driverFor(devices, connected = true, language = 'en') {
   assert.ok(Driver, `ALPSTUGA driver must load: ${loadError}`);
   const driver = new Driver();
-  driver.homey = { app: {
+  driver.homey = { __: (key) => translate(language, key), app: {
     isGatewayConnected: () => connected,
     getDevices: async () => devices,
   } };
   return driver;
 }
 
-function deviceFor(sensor = alpstuga()) {
+function deviceFor(sensor = alpstuga(), language = 'en') {
   assert.ok(Device, `ALPSTUGA device must load: ${loadError}`);
   const device = new Device();
   const readings = {};
@@ -70,11 +79,14 @@ function deviceFor(sensor = alpstuga()) {
   device.hasCapability = (id) => ['measure_co2', 'measure_pm25', 'measure_temperature', 'measure_humidity'].includes(id);
   device.setCapabilityValue = async (id, value) => { readings[id] = value; };
   device.setAvailable = async () => { device.available = true; };
-  device.setUnavailable = async () => { device.available = false; };
+  device.setUnavailable = async (message) => {
+    device.available = false;
+    device.unavailableMessage = message;
+  };
   device.setSettings = async (settings) => { device.settings = settings; };
   device.error = (error) => { errors.push(error); };
   device.log = () => {};
-  device.homey = { app: { getDevice: async () => sensor } };
+  device.homey = { __: (key) => translate(language, key), app: { getDevice: async () => sensor } };
   return { device, readings, errors };
 }
 
@@ -111,6 +123,19 @@ test('pairing uses relationId when present and lists a physical ALPSTUGA only on
 
 test('pairing gives setup guidance when the gateway is not configured', async () => {
   await assert.rejects(driverFor([], false).onPairListDevices(), /Settings/);
+});
+
+test('Swedish users receive Swedish gateway setup guidance', async () => {
+  await assert.rejects(driverFor([], false, 'sv').onPairListDevices(), /Inställningar.*Appar/);
+});
+
+test('offline messages use the selected Homey language', async () => {
+  const swedish = deviceFor(null, 'sv').device;
+  await swedish.onInit();
+  assert.equal(swedish.unavailableMessage, 'Enheten är tillfälligt otillgänglig.');
+  const english = deviceFor(null, 'en').device;
+  await english.onInit();
+  assert.equal(english.unavailableMessage, 'The device is temporarily unavailable.');
 });
 
 test('initialization loads all four readings and diagnostic settings', async () => {
