@@ -29,7 +29,7 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
   }
 
   updateCapabilities(blind) {
-    if (typeof blind !== 'undefined') {
+    if (typeof blind !== 'undefined' && blind !== null) {
 
       if (blind.isReachable) {
         this.setAvailable()

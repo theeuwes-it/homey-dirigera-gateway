@@ -57,7 +57,7 @@
     "en": "Fixes for GRILLPLATS outlets, and missing lights"
   },
   "1.0.19": {
-    "en": "Added support for ALPSTUGA air quality monitors with CO₂, PM2.5, temperature and humidity measurements.",
+    "en": "Added support for ALPSTUGA air quality monitors with CO₂, PM2.5, temperature and humidity measurements. Fixes for color temperature and crash around blinds",
     "sv": "Lagt till stöd för ALPSTUGA luftkvalitetsmätare med mätning av CO₂, PM2.5, temperatur och luftfuktighet."
   }
 }
