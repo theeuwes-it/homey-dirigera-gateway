@@ -1,0 +1,16 @@
+[
+  {
+    "id": "capabilities",
+    "type": "textarea",
+    "label": { "en": "Capabilities", "sv": "Funktioner" },
+    "value": "",
+    "hint": { "en": "A list of this device's capabilities.", "sv": "En lista över enhetens funktioner." }
+  },
+  {
+    "id": "attributes",
+    "type": "textarea",
+    "label": { "en": "Attributes", "sv": "Attribut" },
+    "value": "",
+    "hint": { "en": "A list of this device's attributes.", "sv": "En lista över enhetens attribut." }
+  }
+]

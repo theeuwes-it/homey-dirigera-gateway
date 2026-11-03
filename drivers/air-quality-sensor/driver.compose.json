@@ -1,0 +1,35 @@
+{
+  "name": {
+    "en": "ALPSTUGA Air Quality Monitor",
+    "sv": "ALPSTUGA Luftkvalitetsmätare"
+  },
+  "class": "sensor",
+  "capabilities": [
+    "measure_co2",
+    "measure_pm25",
+    "measure_temperature",
+    "measure_humidity"
+  ],
+  "capabilitiesOptions": {
+    "measure_co2": { "decimals": 0 },
+    "measure_pm25": { "decimals": 0 },
+    "measure_temperature": { "decimals": 1 },
+    "measure_humidity": { "decimals": 0 }
+  },
+  "connectivity": ["lan"],
+  "pair": [
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": { "next": "add_devices" }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ],
+  "images": {
+    "small": "{{driverAssetsPath}}/images/small.png",
+    "large": "{{driverAssetsPath}}/images/large.png"
+  }
+}

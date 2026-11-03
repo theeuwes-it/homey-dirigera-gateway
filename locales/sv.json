@@ -1,0 +1,6 @@
+{
+  "air_quality_sensor": {
+    "gateway_not_configured": "Konfigurera först din gateway under Inställningar → Appar → IKEA DIRIGERA Gateway.",
+    "unavailable": "Enheten är tillfälligt otillgänglig."
+  }
+}
