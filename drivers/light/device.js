@@ -90,7 +90,7 @@ module.exports = class DirigeraLightDevice extends DirigeraDevice {
         const kelvinCool = Math.max(this.colorTemperatureMin, this.colorTemperatureMax);
         const kelvinWarm = Math.min(this.colorTemperatureMin, this.colorTemperatureMax);
 
-        const kelvin = kelvinWarm + (1 - value) * (kelvinCool - kelvinWarm);
+        const kelvin = Math.round(kelvinWarm + (1 - value) * (kelvinCool - kelvinWarm));
         if (this.isDebugLoggingEnabled()) {
           this.log(`${this.getName()} - light_temperature: Setting color temperature to ${kelvin}K`);
         }
