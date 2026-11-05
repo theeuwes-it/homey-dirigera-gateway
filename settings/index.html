@@ -226,6 +226,8 @@
 
         discoverElement.addEventListener("click", function (e) {
           Homey.api("GET", "/", null, function (err, data) {
+            if (err) return Homey.alert(err);
+            if (!data || !data.data) return Homey.alert(Homey.__("settings.discover_not_found"));
             ipAddressElement.value = data.data;
             Homey.set("ipAddress", data.data, function (err) {
               if (err) return Homey.alert(err);

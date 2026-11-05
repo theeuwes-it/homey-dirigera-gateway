@@ -176,12 +176,40 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     return null;
   }
 
-  async discover() {
+  async discover(timeout = 10000) {
     return new Promise((resolve) => {
-      // eslint-disable-next-line no-new
-      new Dirigera.Discover((data) => {
+      let discover = null;
+      let timer = null;
+      const finish = (data) => {
+        clearTimeout(timer);
+        if (discover && discover.mdns) {
+          try {
+            discover.mdns.destroy();
+          } catch (e) {
+            // ignore
+          }
+        }
         resolve(data);
-      });
+      };
+      try {
+        discover = new Dirigera.Discover((data) => {
+          finish(data);
+        });
+        // mdns-server emits 'error' when it can't bind to an interface (e.g. EADDRNOTAVAIL on an
+        // IPv6 address). Without a listener that crashes the app.
+        discover.mdns.on('error', (err) => {
+          this.error('Discovery error', err);
+          finish(null);
+        });
+        discover.mdns.on('warning', (err) => {
+          this.log('Discovery warning', err && err.message);
+        });
+      } catch (err) {
+        this.error('Discovery failed', err);
+        finish(null);
+        return;
+      }
+      timer = setTimeout(() => finish(null), timeout);
     });
   }
 

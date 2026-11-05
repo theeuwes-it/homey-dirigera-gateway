@@ -11,6 +11,7 @@
     "title_ip_address": "Click 'Discover' to search for your DIRIGERA Gateway or enter the IP address manually",
     "field_ip_address": "IP address",
     "button_discover": "Discover",
+    "discover_not_found": "No DIRIGERA Gateway found. Please enter the IP address manually.",
 
     "legend_authentication": "Authentication settings",
     "title_authenticate": "Make sure the IP address is filled before starting the authentication flow.",
