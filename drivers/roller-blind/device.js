@@ -17,6 +17,10 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
    */
   async onInit() {
     this._instanceId = this.getData().id;
+    // alarm_battery is not allowed next to measure_battery; remove it from already-paired devices
+    if (this.hasCapability('alarm_battery')) {
+      await this.removeCapability('alarm_battery').catch(this.error);
+    }
     const device = await this.homey.app.getDevice(this._instanceId);
     await this.updateSettings(device);
     this.updateCapabilities(device);
@@ -59,17 +63,6 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
       if (this.hasCapability('measure_battery')) {
         this.setCapabilityValue('measure_battery', blind.attributes['batteryPercentage'])
             .catch(this.error);
-      }
-      if (this.hasCapability('alarm_battery')) {
-        const currentAlarm = this.getCapabilityValue('alarm_battery');
-        const currentPercentage = blind.attributes['batteryPercentage'];
-        if (currentPercentage < 20 && !currentAlarm) {
-          this.setCapabilityValue('alarm_battery', true)
-              .catch(this.error);
-        } else if (currentPercentage >= 20 && currentAlarm) {
-          this.setCapabilityValue('alarm_battery', false)
-              .catch(this.error);
-        }
       }
     }
   }

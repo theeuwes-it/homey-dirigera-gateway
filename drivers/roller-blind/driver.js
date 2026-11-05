@@ -37,7 +37,6 @@ module.exports = class MyDriver extends DirigeraDriver {
       }
       if (device.attributes['batteryPercentage']) {
         capabilities.push('measure_battery')
-        capabilities.push('alarm_battery')
       }
 
       blinds.push({

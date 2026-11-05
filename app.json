@@ -366,8 +366,7 @@
       "capabilities": [
         "windowcoverings_set",
         "windowcoverings_closed",
-        "measure_battery",
-        "alarm_battery"
+        "measure_battery"
       ],
       "energy": {
         "batteries": [
