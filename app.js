@@ -49,8 +49,18 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     this._gatewayConnected = false;
     if (this._dirigera != null) {
       this._dirigera.stopListeningForUpdates();
+      this._dirigera = null;
     }
-    this._dirigera = new Dirigera.Dirigera(this.homey.settings.get('ipAddress'), this.homey.settings.get('accessToken'));
+    const ipAddress = this.homey.settings.get('ipAddress');
+    const accessToken = this.homey.settings.get('accessToken');
+    if (!ipAddress || !accessToken) {
+      // Fresh install: nothing configured yet. Don't create a client for
+      // https://undefined:8443 – pairing would hang on it. The settings
+      // listener reconnects once the user has authenticated.
+      this.log('DIRIGERA gateway not configured yet');
+      return;
+    }
+    this._dirigera = new Dirigera.Dirigera(ipAddress, accessToken);
     this._gatewayConnected = true;
     this._debugLoggingEnabled = this.homey.settings.get('debugLogging');
     this.log('Connected to DIRIGERA gateway');
@@ -114,15 +124,25 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     return this._dirigera;
   }
 
-  async getDevices() {
-    return new Promise((resolve) => {
-      this._dirigera.getDeviceList((list) => {
-        if (this._debugLoggingEnabled) {
-          this.log(`Device list: ${JSON.stringify(list)}`);
-        }
-        resolve(list);
+  async getDevices(timeout = 30000) {
+    if (!this._dirigera) {
+      throw new Error('First go to Settings -> Apps -> IKEA DIRIGERA Gateway to configure.');
+    }
+    // dirigera-simple swallows network errors (it never calls our callback),
+    // so guard with a timeout to avoid an endless spinner while pairing.
+    const list = await new Promise((resolve) => {
+      const timer = this.homey.setTimeout(() => {
+        resolve(new Error(`no response from gateway at ${this.homey.settings.get('ipAddress')}`));
+      }, timeout);
+      this._dirigera.getDeviceList((data) => {
+        this.homey.clearTimeout(timer);
+        resolve(data);
       });
     });
+    if (this._debugLoggingEnabled) {
+      this.log(`Device list: ${list instanceof Error ? list.message : JSON.stringify(list)}`);
+    }
+    return Utils.parseDeviceList(list);
   }
 
   async getDevice(id) {

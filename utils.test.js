@@ -37,3 +37,14 @@ test('lookup by occupancy endpoint id still returns occupancy', () => {
   assert.equal(selected.deviceType, 'occupancySensor');
   assert.equal(selected.attributes.isDetected, false);
 });
+
+test('parseDeviceList returns the array from the gateway', () => {
+  const devices = [{ id: 'a' }];
+  assert.equal(Utils.parseDeviceList(devices), devices);
+});
+
+test('parseDeviceList throws a readable error for an error response', () => {
+  assert.throws(() => Utils.parseDeviceList({ error: 'Unauthorized' }), /Unauthorized/);
+  assert.throws(() => Utils.parseDeviceList(new Error('no response from gateway')), /no response from gateway/);
+  assert.throws(() => Utils.parseDeviceList(undefined), /Could not get the device list/);
+});

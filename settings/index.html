@@ -144,7 +144,7 @@
 
         function checkConnection() {
           Homey.api("GET", "/getDevices", null, function (err, data) {
-            if (data.length > 0) {
+            if (!err && Array.isArray(data) && data.length > 0) {
               showAuthenticationSucceeded()
             } else {
               showAuthenticateButton()
