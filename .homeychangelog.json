@@ -62,5 +62,8 @@
   },
   "1.0.20": {
     "en": "Removed battery alarm from the IKEA blinds. Please use the battery level instead."
+  },
+  "1.0.21": {
+    "en": "Fixed adding devices not working on a new installation. Shows a clear error when the gateway can't be reached."
   }
 }
