@@ -6,11 +6,7 @@ const DirigeraDriver = require('../DirigeraDriver');
 module.exports = class DirigeraAirQualitySensorDriver extends DirigeraDriver {
 
   async onPairListDevices() {
-    if (!this.homey.app.isGatewayConnected()) {
-      throw new Error(this.homey.__('air_quality_sensor.gateway_not_configured'));
-    }
-
-    const devices = await this.homey.app.getDevices();
+    const devices = await this.homey.app.getPairableDevices();
     const sensors = new Map();
     for (const device of devices) {
       const attributes = device.attributes || {};
@@ -23,7 +19,7 @@ module.exports = class DirigeraAirQualitySensorDriver extends DirigeraDriver {
       if (!sensors.has(id)) {
         sensors.set(id, {
           data: { id },
-          name: attributes.customName || attributes.model || 'ALPSTUGA',
+          name: this.getNameForPairing(device, attributes.customName || attributes.model || 'ALPSTUGA'),
           capabilities: ['measure_co2', 'measure_pm25', 'measure_temperature', 'measure_humidity'],
         });
       }

@@ -4,27 +4,22 @@
     "unavailable": "The device is temporarily unavailable."
   },
   "settings": {
-    "title": "DIRIGERA Settings Page",
-    "subtitle": "Please configure your DIRIGERA Gateway",
-
-    "legend_gateway_settings": "Gateway settings",
-    "title_ip_address": "Click 'Discover' to search for your DIRIGERA Gateway or enter the IP address manually",
+    "title": "DIRIGERA Settings",
+    "subtitle": "Manage the IKEA DIRIGERA hubs connected to Homey.",
+    "legend_gateway_settings": "Hubs",
+    "field_hub": "Hub",
+    "add_hub": "Add a hub",
+    "field_hub_name": "Hub name",
     "field_ip_address": "IP address",
     "button_discover": "Discover",
-    "discover_not_found": "No DIRIGERA Gateway found. Please enter the IP address manually.",
-
-    "legend_authentication": "Authentication settings",
-    "title_authenticate": "Make sure the IP address is filled before starting the authentication flow.",
-    "button_authenticate": "Authenticate",
-    "field_access_token": "Access Token",
-
-    "title_authenticated": "Gateway authentication success!",
-    "button_restart_authentication": "Restart authentication",
-
-    "title_authentication_error": "Could not authenticate",
-
+    "discover_not_found": "No DIRIGERA hub found. Enter the IP address manually.",
+    "button_authenticate": "Authenticate hub",
+    "button_restart_authentication": "Re-authenticate hub",
+    "title_authenticated": "Hub authenticated.",
+    "press_action_button": "Press the action button on this DIRIGERA hub.",
+    "button_remove": "Remove hub",
+    "confirm_remove": "Remove this hub? Its devices will become unavailable and must be paired again if you add the hub later.",
     "legend_debugging": "Debugging",
-    "field_debugging": "Debug logging",
-    "button_save": "Save changes"
+    "field_debugging": "Debug logging"
   }
 }

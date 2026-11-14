@@ -16,12 +16,12 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
    * onInit is called when the device is initialized.
    */
   async onInit() {
-    this._instanceId = this.getData().id;
+    this._instanceId = this.getDirigeraAddress().deviceId;
     // alarm_battery is not allowed next to measure_battery; remove it from already-paired devices
     if (this.hasCapability('alarm_battery')) {
       await this.removeCapability('alarm_battery').catch(this.error);
     }
-    const device = await this.homey.app.getDevice(this._instanceId);
+    const device = await this.getInitialDirigeraDevice();
     await this.updateSettings(device);
     this.updateCapabilities(device);
     this.registerMultipleCapabilityListener(this.getCapabilities(), this._onMultipleCapabilityListener.bind(this), CAPABILITIES_SET_DEBOUNCE);
@@ -68,7 +68,7 @@ module.exports = class DirigeraRollerBlindDevice extends DirigeraDevice {
   }
 
   async _onMultipleCapabilityListener(valueObj) {
-    const dirigera = this.homey.app.getDirigera();
+    const dirigera = this.getDirigeraConnection().client;
     const swapUpDown = this.swapUpDown();
     for (const [key, value] of Object.entries(valueObj)) {
       if (key === 'windowcoverings_set') {

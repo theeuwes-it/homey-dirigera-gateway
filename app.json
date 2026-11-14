@@ -40,6 +40,14 @@
       "method": "GET",
       "path": "/getDevices"
     },
+    "getHubs": {
+      "method": "GET",
+      "path": "/hubs"
+    },
+    "removeHub": {
+      "method": "POST",
+      "path": "/removeHub"
+    },
     "startAuthenticationProcess": {
       "method": "POST",
       "path": "/"

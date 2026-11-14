@@ -1,21 +1,30 @@
 module.exports = {
-    async discover({homey, query}) {
-        return await homey.app.discover();
+    async discover({homey}) {
+        return homey.app.discover();
     },
 
-    async getDevices({homey, query}) {
-        return await homey.app.getDevices();
+    async getDevices({homey}) {
+        const devices = await homey.app.getPairableDevices();
+        return devices.map(({ hubId, hubName, ...device }) => device);
+    },
+
+    async getHubs({homey}) {
+        return homey.app.getHubs();
+    },
+
+    async removeHub({homey, body}) {
+        return homey.app.removeHub(body.hub_id);
     },
 
     async startAuthenticationProcess({homey, body}) {
-        return await homey.app.startAuthenticationProcess(body.ip_address);
+        return homey.app.startAuthenticationProcess(body);
     },
 
     async getAccessToken({homey, body}) {
-        return await homey.app.getAccessToken();
+        return homey.app.finishAuthentication(body.session_id);
     },
 
     async setDebugging({homey, body}) {
-        homey.app.updateDebugging(body.debug_logging);
-    }
-}
+        homey.settings.set('debugLogging', Boolean(body.debug_logging));
+    },
+};

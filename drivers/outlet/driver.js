@@ -18,11 +18,7 @@ module.exports = class DirigeraOutletDriver extends DirigeraDriver {
    * This should return an array with the data of devices that are available for pairing.
    */
   async onPairListDevices() {
-    if (!this.homey.app.isGatewayConnected()) {
-      throw new Error('First go to Settings -> Apps -> IKEA DIRIGERA Gateway to configure.');
-    }
-
-    const devices = await this.homey.app.getDevices();
+    const devices = await this.homey.app.getPairableDevices();
     const outlets = [];
     for (const device of devices) {
       if (device.type !== 'outlet') {
@@ -39,7 +35,7 @@ module.exports = class DirigeraOutletDriver extends DirigeraDriver {
           id: id,
         },
         capabilities,
-        name: (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model),
+        name: this.getNameForPairing(device, (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model)),
       });
     }
     return outlets.sort(Utils._compareHomeyDevice);

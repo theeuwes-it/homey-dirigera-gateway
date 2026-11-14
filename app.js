@@ -1,161 +1,217 @@
 'use strict';
 
+const { randomUUID } = require('crypto');
+const { isIP } = require('net');
 const Homey = require('homey');
 const Dirigera = require('dirigera-simple');
-const DirigeraDevice = require("./drivers/DirigeraDevice");
+const DirigeraDevice = require('./drivers/DirigeraDevice');
+const HubConnection = require('./lib/hub-connection');
+const { startAuthentication, getAccessToken } = require('./lib/hub-authentication');
 const Utils = require('./utils');
+
+const LEGACY_HUB_ID = 'legacy';
+const HUBS_SETTING = 'hubs';
 
 class IkeaDirigeraGatewayApp extends Homey.App {
 
-  /**
-   * onInit is called when the app is initialized.
-   */
   async onInit() {
-    this.log('Ikea Dirigera Gateway App has been initialized');
+    this.hubs = new Map();
+    this.authentications = new Map();
 
-    this._gatewayConnected = false;
-
-    await (async (args, callback) => {
-      try {
-        await this.connect();
-      } catch (err) {
-        this.log(`Error: ${err.message}`);
-      }
-    })();
-
-    // Re-connect automatically whenever the IP address or access token is
-    // (re-)configured on the settings page, instead of requiring a manual
-    // app restart. Debounced because the settings page saves several keys
-    // in quick succession during the authentication flow.
-    this.homey.settings.on('set', (key) => {
-      if (key !== 'ipAddress' && key !== 'accessToken') {
-        return;
-      }
-      if (this._reconnectTimeout) {
-        this.homey.clearTimeout(this._reconnectTimeout);
-      }
-      this._reconnectTimeout = this.homey.setTimeout(async () => {
-        this.log(`Setting '${key}' changed, reconnecting to DIRIGERA gateway...`);
-        try {
-          await this.connect();
-        } catch (err) {
-          this.log(`Error reconnecting: ${err.message}`);
-        }
-      }, 2000);
-    });
-  }
-
-  async connect() {
-    this._gatewayConnected = false;
-    if (this._dirigera != null) {
-      this._dirigera.stopListeningForUpdates();
-      this._dirigera = null;
-    }
+    const saved = this.homey.settings.get(HUBS_SETTING);
     const ipAddress = this.homey.settings.get('ipAddress');
     const accessToken = this.homey.settings.get('accessToken');
-    if (!ipAddress || !accessToken) {
-      // Fresh install: nothing configured yet. Don't create a client for
-      // https://undefined:8443 – pairing would hang on it. The settings
-      // listener reconnects once the user has authenticated.
-      this.log('DIRIGERA gateway not configured yet');
-      return;
+    const hubs = Array.isArray(saved) ? saved : [];
+    if (!Array.isArray(saved) && ipAddress && accessToken) {
+      hubs.push({ id: LEGACY_HUB_ID, name: 'DIRIGERA', ipAddress, accessToken });
+      this.homey.settings.set(HUBS_SETTING, hubs);
     }
-    this._dirigera = new Dirigera.Dirigera(ipAddress, accessToken);
-    this._gatewayConnected = true;
-    this._debugLoggingEnabled = this.homey.settings.get('debugLogging');
-    this.log('Connected to DIRIGERA gateway');
-    const self = this;
-    this._dirigera.startListeningForUpdates(
-        async (updateEvent) => {
-          if (this._debugLoggingEnabled) {
-            this.log(`Update received: ${JSON.stringify(updateEvent)}`);
-          }
-          try {
-            const device = self.getDeviceFromUpdate(updateEvent);
-            if (device === null) { return }
-            const id = device.getData().id;
-            const newStatus = await self.getDevice(updateEvent.data.id).catch(this.handleError);
-            if (device instanceof DirigeraDevice && newStatus !== null) {
-              if (this._debugLoggingEnabled) {
-                this.log(`Updating device ${device.getName()} (${id}) with new status: ${JSON.stringify(newStatus)}`);
-              }
-              device.updateCapabilities(newStatus);
-            }
-          } catch (e) {
-            this.log(`Error (${updateEvent.data.id}): ${e.message}`);
-          }
-        },
+    for (const hub of hubs) this.connectHub(hub);
+  }
+
+  async onUninit() {
+    const connections = [...this.hubs.values()];
+    this.hubs.clear();
+    for (const connection of connections) connection.close();
+    for (const session of this.authentications.values()) this.homey.clearTimeout(session.timer);
+    this.authentications.clear();
+  }
+
+  connectHub(hub) {
+    const previous = this.hubs.get(hub.id);
+    const connection = new HubConnection(this.homey, hub);
+    this.hubs.set(hub.id, connection);
+    if (previous) previous.close();
+
+    connection.listen(
+      message => this.handleUpdate(connection, message),
+      () => this.refreshHubDevices(connection).catch(err => this.error(hub.name, err)),
+      () => this.markHubUnavailable(connection).catch(err => this.error(hub.name, err)),
     );
   }
 
-  getDeviceFromUpdate(updateEvent) {
-    const id = updateEvent.data.id;
-    const driver = this.getDriverForType(updateEvent.data.type, updateEvent.data.deviceType);
-    let device = null;
-    if (driver != null) {
-      try {
-        device = driver.getDevice({
-          id: id,
-        });
-      } catch (e) {
-        device = null;
+  getHubs() {
+    return Array.from(this.hubs.values(), ({ hub }) => ({
+      id: hub.id,
+      name: hub.name,
+      ipAddress: hub.ipAddress,
+    }));
+  }
+
+  saveHubs(hubs) {
+    this.homey.settings.set(HUBS_SETTING, hubs);
+  }
+
+  async removeHub(id) {
+    const connection = this.getHubConnection(id);
+    const devices = this.getHubDevices(id);
+    this.saveHubs(Array.from(this.hubs.values(), entry => entry.hub).filter(hub => hub.id !== id));
+    this.hubs.delete(id);
+    connection.close();
+    await Promise.all(devices.map(device => device.setUnavailable('DIRIGERA hub removed')));
+    return this.getHubs();
+  }
+
+  async startAuthenticationProcess({ hub_id, ip_address, name }) {
+    const ipAddress = (typeof ip_address === 'string' ? ip_address : '').trim();
+    if (isIP(ipAddress) !== 4) throw new Error('Enter a valid IPv4 address for the DIRIGERA hub');
+    const previous = hub_id ? this.getHubConnection(hub_id) : null;
+    const hubName = (typeof name === 'string' ? name : '').trim() || ipAddress;
+    const id = hub_id || randomUUID();
+    if (this.findHubByAddress(ipAddress, id)) {
+      throw new Error('A DIRIGERA hub with this IP address is already configured');
+    }
+    if (Array.from(this.authentications.values()).some(session => (
+      session.hub.id === id || session.hub.ipAddress === ipAddress
+    ))) {
+      throw new Error('Authentication is already in progress for this hub');
+    }
+
+    const sessionId = randomUUID();
+    const session = { hub: { id, name: hubName, ipAddress }, previous };
+    this.authentications.set(sessionId, session);
+    try {
+      session.credentials = await startAuthentication(ipAddress);
+      session.timer = this.homey.setTimeout(() => this.authentications.delete(sessionId), 90000);
+      return { sessionId };
+    } catch (err) {
+      this.authentications.delete(sessionId);
+      throw err;
+    }
+  }
+
+  async finishAuthentication(sessionId) {
+    const session = this.authentications.get(sessionId);
+    if (!session || !session.credentials || session.finishing) {
+      throw new Error('Start a new DIRIGERA authentication session');
+    }
+    session.finishing = true;
+    this.homey.clearTimeout(session.timer);
+    const { hub, previous } = session;
+    try {
+      const accessToken = await getAccessToken(hub.ipAddress, session.credentials);
+      if (this.findHubByAddress(hub.ipAddress, hub.id)
+          || (previous && this.hubs.get(hub.id) !== previous)) {
+        throw new Error('Hub settings changed during authentication. Try again.');
       }
+      const updated = { ...hub, accessToken };
+      const otherHubs = Array.from(this.hubs.values(), entry => entry.hub).filter(entry => entry.id !== hub.id);
+      this.saveHubs([...otherHubs, updated]);
+      this.connectHub(updated);
+      return this.getHubs();
+    } finally {
+      this.authentications.delete(sessionId);
     }
-    if (!device && typeof id === 'string' && id.includes('_')) {
-      const baseId = id.split('_', 1)[0];
-      if (driver != null) {
-        try {
-          device = driver.getDevice({
-            id: baseId,
-          });
-        } catch (e) {
-          device = null;
-        }
-      }
-    }
-    return device;
   }
 
-  isGatewayConnected() {
-    return this._gatewayConnected;
+  findHubByAddress(ipAddress, exceptId) {
+    return Array.from(this.hubs.values()).find(({ hub }) => hub.ipAddress === ipAddress && hub.id !== exceptId);
   }
 
-  getDirigera() {
-    return this._dirigera;
+  getHubConnection(hubId) {
+    const connection = this.hubs.get(hubId);
+    if (!connection) throw new Error('This DIRIGERA hub is not configured');
+    return connection;
   }
 
-  async getDevices(timeout = 30000) {
-    if (!this._dirigera) {
-      throw new Error('First go to Settings -> Apps -> IKEA DIRIGERA Gateway to configure.');
-    }
-    // dirigera-simple swallows network errors (it never calls our callback),
-    // so guard with a timeout to avoid an endless spinner while pairing.
-    const list = await new Promise((resolve) => {
-      const timer = this.homey.setTimeout(() => {
-        resolve(new Error(`no response from gateway at ${this.homey.settings.get('ipAddress')}`));
-      }, timeout);
-      this._dirigera.getDeviceList((data) => {
-        this.homey.clearTimeout(timer);
-        resolve(data);
+  // Already-paired Homey devices keep the original { id } data exactly.
+  getHomeyDeviceId(hubId, deviceId) {
+    return hubId === LEGACY_HUB_ID ? deviceId : `${hubId}:${deviceId}`;
+  }
+
+  getDeviceAddress(homeyId) {
+    const separator = homeyId.indexOf(':');
+    if (separator === -1) return { hubId: LEGACY_HUB_ID, deviceId: homeyId };
+    return { hubId: homeyId.slice(0, separator), deviceId: homeyId.slice(separator + 1) };
+  }
+
+  getHubDevices(hubId) {
+    return Object.values(this.homey.drivers.getDrivers())
+      .flatMap(driver => Object.values(driver.getDevices()))
+      .filter(device => device instanceof DirigeraDevice && device.getDirigeraAddress().hubId === hubId);
+  }
+
+  async markHubUnavailable(connection) {
+    if (this.hubs.get(connection.hub.id) !== connection) return;
+    await Promise.all(this.getHubDevices(connection.hub.id).map(device => (
+      device.setUnavailable(`DIRIGERA hub ${connection.hub.name} is unavailable`)
+    )));
+  }
+
+  async refreshHubDevices(connection) {
+    const devices = await connection.getDevices();
+    if (this.hubs.get(connection.hub.id) !== connection) return;
+    await Promise.all(this.getHubDevices(connection.hub.id).map(device => {
+      const { deviceId } = device.getDirigeraAddress();
+      return this.updateDevice(device, devices, deviceId);
+    }));
+  }
+
+  async handleUpdate(connection, message) {
+    try {
+      const { data } = JSON.parse(message);
+      if (!data || typeof data.id !== 'string') return;
+      if (this.homey.settings.get('debugLogging')) this.log('DIRIGERA update', connection.hub.name, data);
+      const driver = this.getDriverForType(data.type, data.deviceType);
+      if (!driver) return;
+      const candidates = [data.id, data.relationId, data.id.split('_', 1)[0]];
+      const device = Object.values(driver.getDevices()).find(entry => {
+        const { hubId, deviceId } = entry.getDirigeraAddress();
+        return hubId === connection.hub.id && candidates.includes(deviceId);
       });
-    });
-    if (this._debugLoggingEnabled) {
-      this.log(`Device list: ${list instanceof Error ? list.message : JSON.stringify(list)}`);
+      if (!device) return;
+      const devices = await connection.getDevices();
+      if (this.hubs.get(connection.hub.id) !== connection) return;
+      await this.updateDevice(device, devices, device.getDirigeraAddress().deviceId);
+    } catch (err) {
+      this.error('DIRIGERA update failed', connection.hub.name, err);
     }
-    return Utils.parseDeviceList(list);
   }
 
-  async getDevice(id) {
-    const devices = await this.getDevices();
-    return Utils.selectDirigeraDevice(devices, id);
+  async updateDevice(device, devices, deviceId) {
+    const status = Utils.selectDirigeraDevice(devices, deviceId);
+    if (!status) {
+      await device.setUnavailable('Device not found on its DIRIGERA hub');
+      return;
+    }
+    const related = devices.filter(entry => entry.id === deviceId || entry.relationId === deviceId);
+    await device.updateCapabilities(status, related);
   }
 
-  /*
-   * @returns DirigeraDriver
-   */
-  async getRelatedDevices(relationId) {
-    const devices = await this.getDevices();
-    return devices.filter(device => device.id === relationId || device.relationId === relationId);
+  async getPairableDevices() {
+    const connections = [...this.hubs.values()];
+    if (connections.length === 0) {
+      throw new Error('First go to Settings -> Apps -> IKEA DIRIGERA Gateway to configure a hub.');
+    }
+    const results = await Promise.allSettled(connections.map(async connection => {
+      const { id, name } = connection.hub;
+      const devices = await connection.getDevices();
+      if (this.hubs.get(id) !== connection) return [];
+      return devices.map(device => ({ ...device, hubId: id, hubName: connections.length > 1 ? name : null }));
+    }));
+    const available = results.filter(result => result.status === 'fulfilled');
+    if (available.length === 0) throw results[0].reason;
+    return available.flatMap(result => result.value);
   }
 
   getDriverForType(type, deviceType) {
@@ -233,57 +289,6 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     });
   }
 
-  async startAuthenticationProcess(ipAddress) {
-    this._authenticate = new Dirigera.AuthenticateV2(ipAddress);
-    const self = this;
-    return new Promise((resolve) => {
-      self._authenticate.listener = {
-        hubNotFound() {
-          resolve({success: false, error: 'Hub was not found. Please check the IP address'});
-          self._authenticate = null; // cleanup
-        },
-        pairingError(error) {
-          resolve({success: false, error: error});
-          self._authenticate = null; // cleanup
-        },
-        codeReceived() {
-          resolve({success: true})
-        }
-      };
-      self._authenticate.startAuthProcess();
-    });
-  }
-
-  async getAccessToken() {
-    if (this._authenticate == null) {
-      return {success: false, error: 'Authentication flow not started. Please restart the flow.'};
-    }
-    const self = this;
-    return new Promise((resolve) => {
-      self._authenticate.listener = {
-        pairingError(error) {
-          resolve({success: false, error: error});
-        },
-        pairingSucceeded(result) {
-          resolve({success: true, result: result});
-          self._authenticate = null; // cleanup
-        }
-      };
-      self._authenticate.checkForAccessCode();
-    })
-  }
-
-  updateDebugging(debugging) {
-    this._debugLoggingEnabled = debugging;
-    if (debugging) {
-      this.log("Debug logging enabled");
-    } else {
-      this.log("Debug logging disabled");
-    }
-  }
-
-  handleError(error) {
-    this.log(`Error: ${error}`)
-  }
 }
+
 module.exports = IkeaDirigeraGatewayApp;

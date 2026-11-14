@@ -7,8 +7,8 @@ const CAPABILITIES_SET_DEBOUNCE = 100;
 module.exports = class DirigeraLightDevice extends DirigeraDevice {
 
   async onInit() {
-    this._instanceId = this.getData().id;
-    const device = await this.homey.app.getDevice(this._instanceId);
+    this._instanceId = this.getDirigeraAddress().deviceId;
+    const device = await this.getInitialDirigeraDevice();
     await this.updateSettings(device);
     this.updateCapabilities(device);
     this.registerMultipleCapabilityListener(this.getCapabilities(), this._onMultipleCapabilityListener.bind(this), CAPABILITIES_SET_DEBOUNCE);
@@ -74,7 +74,7 @@ module.exports = class DirigeraLightDevice extends DirigeraDevice {
   }
 
   _onMultipleCapabilityListener(valueObj) {
-    const dirigera = this.homey.app.getDirigera();
+    const dirigera = this.getDirigeraConnection().client;
     for (const [key, value] of Object.entries(valueObj)) {
       if (key === 'dim') {
         if (this.isDebugLoggingEnabled()) {
