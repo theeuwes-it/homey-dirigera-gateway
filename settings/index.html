@@ -75,6 +75,24 @@
         margin: 0;
       }
 
+      .settings-controls label.debug-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 36px;
+        font: inherit;
+        text-transform: none;
+        cursor: pointer;
+      }
+
+      .debug-toggle > input {
+        flex: 0 0 auto;
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: #0055c9;
+      }
+
       #pairingPrompt {
         margin: 12px 0;
         padding: 14px;
@@ -129,6 +147,14 @@
             <button type="button" id="discover" class="settings-button" data-i18n="settings.button_discover"></button>
           </div>
         </div>
+        <div class="homey-form-group" id="discoveryResults" hidden>
+          <label class="homey-form-label" for="discoveredAddress" data-i18n="settings.field_discovered_hubs"></label>
+          <select class="homey-form-select" id="discoveredAddress"></select>
+        </div>
+        <div class="homey-form-group">
+          <label class="homey-form-label" for="newHubName" data-i18n="settings.field_hub_name"></label>
+          <input class="homey-form-input" id="newHubName" type="text" />
+        </div>
         <button type="button" id="addHub" class="settings-button" data-i18n="settings.add_hub"></button>
       </fieldset>
 
@@ -136,7 +162,7 @@
 
       <fieldset class="homey-form-fieldset">
         <legend class="homey-form-legend" data-i18n="settings.legend_debugging"></legend>
-        <label>
+        <label class="debug-toggle">
           <input id="debugLogging" type="checkbox" />
           <span data-i18n="settings.field_debugging"></span>
         </label>
@@ -150,6 +176,9 @@
         const select = get('hub');
         const name = get('hubName');
         const ip = get('ipAddress');
+        const newHubName = get('newHubName');
+        const discoveryResults = get('discoveryResults');
+        const discoveredAddress = get('discoveredAddress');
         const status = get('status');
         const pairingPrompt = get('pairingPrompt');
         const remove = get('remove');
@@ -215,17 +244,31 @@
           selectHub();
           showStatus('', '');
         });
+        discoveredAddress.addEventListener('change', () => {
+          ip.value = discoveredAddress.value;
+        });
+        ip.addEventListener('input', () => {
+          discoveredAddress.value = '';
+        });
         get('discover').addEventListener('click', () => run(async () => {
+          ip.value = '';
+          discoveryResults.hidden = true;
           const result = await api('GET', '/');
-          if (!result || !result.data) throw new Error(Homey.__('settings.discover_not_found'));
-          ip.value = result.data;
+          if (!Array.isArray(result?.addresses)) throw new Error(Homey.__('settings.discovery_unconfirmed'));
+          const configured = new Set(hubs.map(hub => hub.ipAddress));
+          const addresses = result.addresses.filter(address => !configured.has(address));
+          if (!addresses.length) throw new Error(Homey.__('settings.discover_not_found'));
+
+          discoveredAddress.replaceChildren(new Option(Homey.__('settings.choose_address'), ''));
+          for (const address of addresses) discoveredAddress.add(new Option(address, address));
+          discoveryResults.hidden = false;
           showStatus(Homey.__('settings.hub_discovered'), 'success');
         }));
 
         async function authenticate(hub) {
           const session = await api('POST', '/', {
             hub_id: hub?.id || null,
-            name: hub?.name,
+            name: hub ? hub.name : newHubName.value.trim(),
             ip_address: hub?.ipAddress || ip.value.trim(),
           });
           if (!session?.sessionId) throw new Error(Homey.__('settings.authentication_unconfirmed'));
@@ -239,7 +282,11 @@
               const result = await api('POST', '/getAccessToken', { session_id: session.sessionId });
               if (result?.hubId && Array.isArray(result.hubs)) {
                 showHubs(result.hubs, result.hubId);
-                if (!hub) ip.value = '';
+                if (!hub) {
+                  ip.value = '';
+                  newHubName.value = '';
+                }
+                discoveryResults.hidden = true;
                 showStatus(Homey.__('settings.title_authenticated'), 'success');
                 return;
               }

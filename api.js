@@ -1,6 +1,6 @@
 module.exports = {
     async discover({homey}) {
-        return homey.app.discover();
+        return { addresses: await homey.app.discover() };
     },
 
     async getDevices({homey}) {

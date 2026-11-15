@@ -3,7 +3,7 @@
 const { randomUUID } = require('crypto');
 const { isIP } = require('net');
 const Homey = require('homey');
-const Dirigera = require('dirigera-simple');
+const createMdns = require('mdns-server');
 const DirigeraDevice = require('./drivers/DirigeraDevice');
 const HubConnection = require('./lib/hub-connection');
 const { startAuthentication, getAccessToken } = require('./lib/hub-authentication');
@@ -279,41 +279,60 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     return null;
   }
 
-  async discover(timeout = 10000) {
-    return new Promise((resolve) => {
-      let discover = null;
-      let timer = null;
-      const finish = (data) => {
+  async discover(timeout = 4000) {
+    const service = '_ihsp._tcp.local';
+    const normalize = name => name.toLowerCase().replace(/\.$/, '');
+    const hosts = new Set();
+    const addresses = new Map();
+
+    await new Promise((resolve, reject) => {
+      const mdns = createMdns({ noInit: true });
+      let finished = false;
+      const timer = setTimeout(() => finish(), timeout);
+      const finish = (error) => {
+        if (finished) return;
+        finished = true;
         clearTimeout(timer);
-        if (discover && discover.mdns) {
-          try {
-            discover.mdns.destroy();
-          } catch (e) {
-            // ignore
+        try {
+          mdns.destroy();
+        } catch (err) {
+          this.error('Could not close DIRIGERA discovery', err);
+        }
+        if (error) reject(error);
+        else resolve();
+      };
+
+      mdns.on('response', ({ answers = [], additionals = [] }) => {
+        for (const record of [...answers, ...additionals]) {
+          if (record.type === 'SRV' && normalize(record.name).endsWith('.' + service)) {
+            hosts.add(normalize(record.data.target));
+          }
+          if (record.type === 'A' && isIP(record.data) === 4) {
+            const host = normalize(record.name);
+            if (!addresses.has(host)) addresses.set(host, new Set());
+            addresses.get(host).add(record.data);
           }
         }
-        resolve(data);
-      };
+      });
+      mdns.on('ready', () => {
+        if (!finished) mdns.query([{ name: service + '.', type: 'PTR' }]);
+      });
+      mdns.on('error', finish);
+      mdns.on('warning', err => this.log('Discovery warning', err.message));
       try {
-        discover = new Dirigera.Discover((data) => {
-          finish(data);
-        });
-        // mdns-server emits 'error' when it can't bind to an interface (e.g. EADDRNOTAVAIL on an
-        // IPv6 address). Without a listener that crashes the app.
-        discover.mdns.on('error', (err) => {
-          this.error('Discovery error', err);
-          finish(null);
-        });
-        discover.mdns.on('warning', (err) => {
-          this.log('Discovery warning', err && err.message);
-        });
+        mdns.initServer();
       } catch (err) {
-        this.error('Discovery failed', err);
-        finish(null);
-        return;
+        finish(err);
       }
-      timer = setTimeout(() => finish(null), timeout);
     });
+
+    const found = new Set();
+    for (const host of hosts) {
+      for (const address of addresses.get(host) || []) {
+        if (!this.findHubByAddress(address)) found.add(address);
+      }
+    }
+    return Array.from(found).sort();
   }
 
 }

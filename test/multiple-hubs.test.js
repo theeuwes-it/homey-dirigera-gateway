@@ -3,6 +3,7 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const Module = require('node:module');
+const { EventEmitter } = require('node:events');
 
 class Socket {
   constructor(url) {
@@ -38,12 +39,14 @@ class Client {
 }
 
 let authenticationToken;
+let mdns;
 const load = Module._load;
 Module._load = function loadMock(name, ...args) {
   if (name === './lib/hub-authentication') return {
     startAuthentication: async () => ({ code: 'code', verifier: 'verifier' }),
     getAccessToken: async () => authenticationToken,
   };
+  if (name === 'mdns-server') return () => mdns;
   if (name === 'homey') return { App: class {}, Device: class {}, Driver: class {} };
   if (name === 'dirigera-simple') return { Dirigera: Client };
   if (name === 'reconnecting-websocket') return Socket;
@@ -83,6 +86,39 @@ async function createApp(settings) {
   await app.onInit();
   return { app, driver, devices };
 }
+
+test('discovers multiple new DIRIGERA addresses across mDNS packets', async () => {
+  const { app } = await createApp({ hubs: [otherHub] });
+  mdns = new EventEmitter();
+  mdns.initServer = () => mdns.emit('ready');
+  mdns.destroy = () => { mdns.closed = true; };
+  const address = (name, data) => ({ name, type: 'A', data });
+  const service = (name, target) => ({
+    name: name + '._ihsp._tcp.local.',
+    type: 'SRV',
+    data: { target },
+  });
+  mdns.query = questions => {
+    assert.deepEqual(questions, [{ name: '_ihsp._tcp.local.', type: 'PTR' }]);
+    mdns.emit('response', {
+      answers: [service('Garage', 'garage.local'), service('Shed', 'SHED.local.')],
+      additionals: [
+        address('garage.local.', otherHub.ipAddress),
+        address('shed.local', '192.168.0.13'),
+        address('printer.local', '192.168.0.100'),
+      ],
+    });
+    mdns.emit('response', { answers: [
+      address('shed.local', '192.168.0.13'),
+      address('attic.local', '192.168.0.12'),
+    ] });
+    mdns.emit('response', { additionals: [service('Attic', 'attic.local')] });
+  };
+
+  assert.deepEqual(await app.discover(5), ['192.168.0.12', '192.168.0.13']);
+  assert.equal(mdns.closed, true);
+  await app.onUninit();
+});
 
 test('polls for the action button and saves the hub only once if the response is retried', async () => {
   const settings = { hubs: [] };

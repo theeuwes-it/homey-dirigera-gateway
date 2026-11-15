@@ -10,6 +10,7 @@
     "got": "^13.0.0",
     "homey-zigbeedriver": "^2.1.0",
     "lodash.debounce": "^4.0.8",
+    "mdns-server": "^1.0.11",
     "reconnecting-websocket": "https://github.com/theeuwes-it/reconnecting-websocket"
   },
   "devDependencies": {
