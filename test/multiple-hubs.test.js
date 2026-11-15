@@ -21,8 +21,11 @@ class Socket {
   }
 }
 
+let failingAddress;
+
 class Client {
   constructor(ipAddress) {
+    if (ipAddress === failingAddress) throw new Error('Connection initialization failed');
     this.ipAddress = ipAddress;
     this.state = {};
     this.devices = [];
@@ -82,9 +85,10 @@ async function createApp(settings) {
     clearInterval() {},
   };
   driver.homey = { app };
-  app.error = err => { throw err; };
+  const errors = [];
+  app.error = (...args) => errors.push(args);
   await app.onInit();
-  return { app, driver, devices };
+  return { app, driver, devices, errors };
 }
 
 test('discovers multiple new DIRIGERA addresses across mDNS packets', async () => {
@@ -155,6 +159,55 @@ test('migrates existing settings once and keeps existing Homey device identifier
   const restarted = await createApp(settings);
   assert.deepEqual(restarted.app.getHubs(), []);
   await restarted.app.onUninit();
+});
+
+test('restores both configured hubs with their original IDs and credentials after restart', async () => {
+  const settings = { ipAddress: '192.168.0.10', accessToken: 'legacy-token' };
+  const { app } = await createApp(settings);
+  const { sessionId } = await app.startAuthenticationProcess({
+    ip_address: otherHub.ipAddress,
+    name: otherHub.name,
+  });
+  authenticationToken = otherHub.accessToken;
+  const { hubId } = await app.finishAuthentication(sessionId);
+  await app.onUninit();
+
+  const saved = JSON.parse(JSON.stringify(settings));
+  const restarted = await createApp(saved);
+  assert.deepEqual(restarted.app.getHubs().map(hub => hub.id), ['legacy', hubId]);
+  assert.equal(restarted.app.getHubConnection(hubId).hub.accessToken, otherHub.accessToken);
+  assert.equal(restarted.app.getHubConnection('legacy').hub.accessToken, 'legacy-token');
+  assert.deepEqual(restarted.app.getDeviceAddress(hubId + ':shared-id'), { hubId, deviceId: 'shared-id' });
+  assert.deepEqual(saved, settings);
+  await restarted.app.onUninit();
+});
+
+test('retains a hub that cannot start while another hub is edited and allows re-authentication with the same ID', async () => {
+  const primary = { ...otherHub, id: 'legacy', ipAddress: '192.168.0.10' };
+  const settings = { hubs: [otherHub, primary] };
+  failingAddress = otherHub.ipAddress;
+  const { app, errors } = await createApp(settings);
+  failingAddress = undefined;
+
+  assert.deepEqual(app.getHubs().map(hub => hub.id), ['second', 'legacy']);
+  assert.equal(errors[0][1], otherHub.name);
+  assert.ok(app.getHubConnection('legacy'));
+  await app.getPairableDevices();
+  assert.equal(errors[1][1], otherHub.name);
+  app.renameHub('legacy', 'Beneden');
+  assert.deepEqual(settings.hubs[0], otherHub);
+
+  const { sessionId } = await app.startAuthenticationProcess({
+    hub_id: otherHub.id,
+    ip_address: otherHub.ipAddress,
+    name: otherHub.name,
+  });
+  authenticationToken = 'renewed-token';
+  const { hubId } = await app.finishAuthentication(sessionId);
+  assert.equal(hubId, otherHub.id);
+  assert.equal(settings.hubs[0].accessToken, 'renewed-token');
+  assert.equal(app.getHubs()[1].name, 'Beneden');
+  await app.onUninit();
 });
 
 test('returns the empty hub list before associated device updates finish', async () => {
