@@ -40,6 +40,21 @@ class Utils {
         if (matches.length === 0) {
             return null;
         }
+        // TIMMERFLOTTE exposes temperature and humidity on separate endpoints.
+        const environment = matches.filter(device => device.deviceType === 'environmentSensor');
+        if (environment.length > 1) {
+            const reachable = environment.filter(device => device.isReachable);
+            const primary = reachable[0] || environment[0];
+            const attributes = { ...primary.attributes };
+            for (const endpoint of reachable.slice(1)) {
+                for (const key of ['currentTemperature', 'currentRH', 'batteryPercentage']) {
+                    if (!Number.isFinite(attributes[key]) && Number.isFinite(endpoint.attributes?.[key])) {
+                        attributes[key] = endpoint.attributes[key];
+                    }
+                }
+            }
+            return { ...primary, attributes };
+        }
         const occupancy = matches.find((device) => (
             device.deviceType === 'occupancySensor' || device.deviceType === 'motionSensor'
         ));

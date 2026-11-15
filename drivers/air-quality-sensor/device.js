@@ -7,6 +7,7 @@ const MEASUREMENTS = {
   measure_pm25: 'currentPM25',
   measure_temperature: 'currentTemperature',
   measure_humidity: 'currentRH',
+  measure_battery: 'batteryPercentage',
 };
 
 module.exports = class DirigeraAirQualitySensorDevice extends DirigeraDevice {

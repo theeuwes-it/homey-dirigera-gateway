@@ -95,13 +95,13 @@ test('ALPSTUGA pairs with all four measurements even though canReceive lists onl
   assert.equal(list.length, 1);
   assert.equal(list[0].data.id, 'alpstuga_1');
   assert.equal(list[0].name, 'Office air');
+  assert.equal(list[0].icon, '/icon.svg');
   assert.deepEqual(list[0].capabilities, ['measure_co2', 'measure_pm25', 'measure_temperature', 'measure_humidity']);
 });
 
 test('pairing excludes unrelated environment sensors and accepts ALPSTUGA by model or product code', async () => {
   const devices = [
     alpstuga({ id: 'vindstyrka', attributes: { model: 'VINDSTYRKA', productCode: 'E2112' } }),
-    alpstuga({ id: 'timmerflotte', attributes: { model: 'TIMMERFLOTTE', productCode: 'E2314' } }),
     alpstuga({ id: 'product', attributes: { productCode: 'E2495', customName: 'A' } }),
     alpstuga({ id: 'model', attributes: { model: 'ALPSTUGA air quality monitor', customName: '' } }),
     { id: 'unknown', deviceType: 'environmentSensor' },
@@ -228,4 +228,40 @@ test('a real ALPSTUGA endpoint event finds the paired Homey device', () => {
     } };
   } } };
   assert.equal(app.getDeviceFromUpdate({ data: alpstuga() }), paired);
+});
+
+test('TIMMERFLOTTE pairs as one sensor and resolves updates from either endpoint', async () => {
+  const temperature = alpstuga({
+    id: 'temp-endpoint', relationId: 'sensor-group',
+    attributes: { model: 'TIMMERFLOTTE temp/hmd sensor', customName: 'Hall', currentTemperature: 19.5, batteryPercentage: 65 },
+  });
+  const humidity = alpstuga({
+    id: 'humidity-endpoint', relationId: 'sensor-group',
+    attributes: { productCode: 'E2314', currentRH: 54 },
+  });
+  const endpoints = [humidity, temperature];
+  const list = await driverFor(endpoints).onPairListDevices();
+  assert.deepEqual(list, [{
+    data: { id: 'sensor-group' },
+    name: 'Hall',
+    icon: '/timmerflotte.svg',
+    capabilities: ['measure_temperature', 'measure_humidity', 'measure_battery'],
+  }]);
+
+  const { device, readings } = deviceFor();
+  device.getData = () => list[0].data;
+  device.hasCapability = id => list[0].capabilities.includes(id);
+  const app = new App();
+  app.getDevices = async () => endpoints;
+  app.homey = { drivers: { getDriver: () => ({
+    getDevice: ({ id }) => id === 'sensor-group' ? device : null,
+  }) } };
+  device.homey.app = app;
+
+  await device.onInit();
+  assert.deepEqual(readings, { measure_temperature: 19.5, measure_humidity: 54, measure_battery: 65 });
+  for (const endpoint of endpoints) assert.equal(app.getDeviceFromUpdate({ data: endpoint }), device);
+  humidity.attributes.currentRH = 61;
+  await device.updateCapabilities(await app.getDevice(device.getData().id));
+  assert.equal(readings.measure_humidity, 61);
 });
