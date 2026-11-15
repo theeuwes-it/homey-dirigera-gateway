@@ -10,11 +10,7 @@ module.exports = class DirigeraMotionSensorDriver extends DirigeraDriver {
   }
 
   async onPairListDevices() {
-    if (!this.homey.app.isGatewayConnected()) {
-      throw new Error('First go to Settings -> Apps -> IKEA DIRIGERA Gateway to configure.');
-    }
-
-    const devices = await this.homey.app.getDevices();
+    const devices = await this.homey.app.getPairableDevices();
     const motionSensors = [];
     for (const device of devices) {
       // MYGGSPRAY is a Matter device and reports itself as an occupancySensor
@@ -37,7 +33,7 @@ module.exports = class DirigeraMotionSensorDriver extends DirigeraDriver {
         store: {
           matterIlluminance: device.deviceType === 'occupancySensor',
         },
-        name: (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model),
+        name: this.getNameForPairing(device, (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model)),
       });
     }
     return motionSensors.sort(Utils._compareHomeyDevice);

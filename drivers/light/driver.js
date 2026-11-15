@@ -10,11 +10,7 @@ module.exports = class DirigeraLightDriver extends DirigeraDriver {
   }
 
   async onPairListDevices() {
-    if (!this.homey.app.isGatewayConnected()) {
-      throw new Error('First go to Settings -> Apps -> IKEA DIRIGERA Gateway to configure.');
-    }
-
-    const devices = await this.homey.app.getDevices();
+    const devices = await this.homey.app.getPairableDevices();
     const lights = [];
     for (const device of devices) {
       if (device.type !== 'light') {
@@ -48,7 +44,7 @@ module.exports = class DirigeraLightDriver extends DirigeraDriver {
           id: id,
         },
         capabilities,
-        name: (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model),
+        name: this.getNameForPairing(device, (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model)),
       });
     }
     return lights.sort(Utils._compareHomeyDevice);

@@ -5,18 +5,21 @@ const DirigeraDevice = require("../DirigeraDevice");
 module.exports = class DirigeraOutletDevice extends DirigeraDevice {
 
   async onInit() {
-    this._instanceId = this.getData().id;
-    const device = await this.homey.app.getDevice(this._instanceId);
+    this._instanceId = this.getDirigeraAddress().deviceId;
+    const device = await this.getInitialDirigeraDevice();
     await this.updateSettings(device);
     this._realId = device ? device.id : this._instanceId;
 
-    const related = await this.homey.app.getRelatedDevices(this._instanceId);
+    const related = device ? await this.getRelatedDirigeraDevices().catch(err => {
+      this.error(err);
+      return null;
+    }) : null;
 
     // Only outlets with an electricalSensor endpoint (e.g. GRILLPLATS) measure
     // energy; plain outlets such as the TRADFRI control outlet do not. Skip when
     // the device is missing from the gateway, as we can't tell which kind it is.
-    const hasEnergy = related.some(d => d.deviceType === 'electricalSensor');
-    if (device != null) {
+    const hasEnergy = related?.some(d => d.deviceType === 'electricalSensor');
+    if (related != null) {
       const energyCaps = ['measure_power', 'measure_voltage', 'measure_current', 'meter_power'];
       for (const cap of energyCaps) {
         if (hasEnergy && !this.hasCapability(cap)) {
@@ -30,18 +33,18 @@ module.exports = class DirigeraOutletDevice extends DirigeraDevice {
     this.updateCapabilities(device, related);
 
     this.registerCapabilityListener('onoff', async (value) => {
-      const dirigera = this.homey.app.getDirigera();
+      const dirigera = this.getDirigeraConnection().client;
       if (this.isDebugLoggingEnabled()) {
         this.log(`${this.getName()} - onoff: Setting outlet state to ${value}`);
       }
       dirigera.setAttribute(this._realId, { 'isOn': value });
     })
 
-    if (hasEnergy) {
+    if (hasEnergy || this.hasCapability('measure_power')) {
       this._pollInterval = this.homey.setInterval(async () => {
         try {
-          const freshDevice = await this.homey.app.getDevice(this._instanceId);
-          const freshRelated = await this.homey.app.getRelatedDevices(this._instanceId);
+          const freshDevice = await this.getDirigeraDevice();
+          const freshRelated = await this.getRelatedDirigeraDevices();
           this.updateCapabilities(freshDevice, freshRelated);
         } catch (err) {
           this.error('Poll refresh failed:', err);
@@ -64,6 +67,7 @@ module.exports = class DirigeraOutletDevice extends DirigeraDevice {
     const isSensorStatus = status.deviceType === 'electricalSensor';
 
     if (!isSensorStatus) {
+      this._realId = status.id;
       if (status.isReachable) {
         this.setAvailable().catch(this.error);
       } else {

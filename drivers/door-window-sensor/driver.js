@@ -10,11 +10,7 @@ module.exports = class DirigeraDoorWindowSensorDriver extends DirigeraDriver {
   }
 
   async onPairListDevices() {
-    if (!this.homey.app.isGatewayConnected()) {
-      throw new Error('First go to Settings -> Apps -> IKEA DIRIGERA Gateway to configure.');
-    }
-
-    const devices = await this.homey.app.getDevices();
+    const devices = await this.homey.app.getPairableDevices();
     const doorWindowSensors = [];
     for (const device of devices) {
       if (device.type !== 'sensor' || device.deviceType !== 'openCloseSensor') {
@@ -31,7 +27,7 @@ module.exports = class DirigeraDoorWindowSensorDriver extends DirigeraDriver {
           id: id,
         },
         capabilities,
-        name: (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model),
+        name: this.getNameForPairing(device, (device['attributes'].customName !== '' ? device['attributes'].customName : device['attributes'].model)),
       });
     }
     return doorWindowSensors.sort(Utils._compareHomeyDevice);

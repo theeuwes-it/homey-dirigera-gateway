@@ -5,8 +5,7 @@ const DirigeraDevice = require("../DirigeraDevice");
 module.exports = class DirigeraDoorWindowSensorDevice extends DirigeraDevice {
 
   async onInit() {
-    this._instanceId = this.getData().id;
-    const device = await this.homey.app.getDevice(this._instanceId);
+    const device = await this.getInitialDirigeraDevice();
     await this.updateSettings(device);
     this.updateCapabilities(device);
     this.log(`Dirigera Door/Window sensor ${this.getName()} has been initialized`);
