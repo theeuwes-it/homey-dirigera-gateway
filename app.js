@@ -62,6 +62,18 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     this.homey.settings.set(HUBS_SETTING, hubs);
   }
 
+  renameHub(id, name) {
+    const connection = this.getHubConnection(id);
+    const hubName = typeof name === 'string' ? name.trim() : '';
+    if (!hubName) throw new Error('Enter a name for the DIRIGERA hub');
+    const hubs = Array.from(this.hubs.values(), ({ hub }) => (
+      hub.id === id ? { ...hub, name: hubName } : hub
+    ));
+    this.saveHubs(hubs);
+    connection.hub.name = hubName;
+    return this.getHubs();
+  }
+
   async removeHub(id) {
     const connection = this.getHubConnection(id);
     const devices = this.getHubDevices(id);

@@ -12,6 +12,10 @@ module.exports = {
         return homey.app.getHubs();
     },
 
+    async renameHub({homey, body}) {
+        return homey.app.renameHub(body.hub_id, body.name);
+    },
+
     async removeHub({homey, body}) {
         return homey.app.removeHub(body.hub_id);
     },

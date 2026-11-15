@@ -17,6 +17,8 @@
     "button_restart_authentication": "Re-authenticate hub",
     "title_authenticated": "Hub authenticated.",
     "press_action_button": "Press the action button on this DIRIGERA hub.",
+    "button_save_name": "Save name",
+    "name_saved": "Hub name saved.",
     "button_remove": "Remove hub",
     "confirm_remove": "Remove this hub? Its devices will become unavailable and must be paired again if you add the hub later.",
     "legend_debugging": "Debugging",

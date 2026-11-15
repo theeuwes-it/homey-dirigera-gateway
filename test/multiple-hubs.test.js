@@ -93,6 +93,25 @@ test('migrates existing settings once and keeps existing Homey device identifier
   await restarted.app.onUninit();
 });
 
+test('saves a new hub name without changing its ID, token or connection', async () => {
+  const settings = { hubs: [otherHub] };
+  const { app } = await createApp(settings);
+  const connection = app.getHubConnection('second');
+
+  assert.throws(() => app.renameHub('second', ' '), /Enter a name/);
+  assert.deepEqual(app.renameHub('second', ' Downstairs '), [
+    { id: 'second', name: 'Downstairs', ipAddress: otherHub.ipAddress },
+  ]);
+  assert.equal(app.getHubConnection('second'), connection);
+  assert.equal(connection.socket.closed, undefined);
+  assert.deepEqual(settings.hubs, [{ ...otherHub, name: 'Downstairs' }]);
+  await app.onUninit();
+
+  const restarted = await createApp(settings);
+  assert.equal(restarted.app.getHubs()[0].name, 'Downstairs');
+  await restarted.app.onUninit();
+});
+
 test('routes identical IDs, events and commands to their own hubs', async () => {
   const primaryHub = { ...otherHub, id: 'legacy', name: 'Home', ipAddress: '192.168.0.10' };
   const { app, driver, devices } = await createApp({ hubs: [primaryHub, otherHub] });

@@ -2,6 +2,15 @@
 <html>
   <head>
     <script src="/homey.js" data-origin="settings"></script>
+    <style>
+      .hub-field-action {
+        margin-top: 8px;
+      }
+
+      .hub-field-action > button {
+        position: static;
+      }
+    </style>
   </head>
   <body>
     <header class="homey-header">
@@ -18,14 +27,21 @@
       <div class="homey-form-group">
         <label class="homey-form-label" for="hubName" data-i18n="settings.field_hub_name"></label>
         <input class="homey-form-input" id="hubName" type="text" />
+        <div class="hub-field-action" id="saveNameAction" hidden>
+          <button type="button" id="saveName" class="homey-button-secondary" data-i18n="settings.button_save_name"></button>
+        </div>
       </div>
       <div class="homey-form-group">
         <label class="homey-form-label" for="ipAddress" data-i18n="settings.field_ip_address"></label>
         <input class="homey-form-input" id="ipAddress" type="text" />
-        <button type="button" id="discover" class="homey-button-secondary" data-i18n="settings.button_discover"></button>
+        <div class="hub-field-action">
+          <button type="button" id="discover" class="homey-button-secondary" data-i18n="settings.button_discover"></button>
+        </div>
       </div>
       <button type="button" id="authenticate" class="homey-button-primary-full"></button>
-      <button type="button" id="remove" class="homey-button-secondary" data-i18n="settings.button_remove"></button>
+      <div class="hub-field-action" id="removeAction" hidden>
+        <button type="button" id="remove" class="homey-button-secondary" data-i18n="settings.button_remove"></button>
+      </div>
       <p id="status" role="status"></p>
     </fieldset>
 
@@ -61,7 +77,8 @@
           name.value = hub ? hub.name : '';
           ip.value = hub ? hub.ipAddress : '';
           authenticate.textContent = Homey.__(hub ? 'settings.button_restart_authentication' : 'settings.button_authenticate');
-          remove.hidden = !hub;
+          get('removeAction').hidden = !hub;
+          get('saveNameAction').hidden = !hub;
           status.textContent = '';
         }
 
@@ -102,6 +119,12 @@
           const newHubs = await api('POST', '/getAccessToken', { session_id: sessionId });
           showHubs(newHubs, newHubs.find(hub => hub.ipAddress === ipAddress)?.id);
           status.textContent = Homey.__('settings.title_authenticated');
+        }));
+        get('saveName').addEventListener('click', () => run(async () => {
+          const selectedId = select.value;
+          const newHubs = await api('POST', '/renameHub', { hub_id: selectedId, name: name.value });
+          showHubs(newHubs, selectedId);
+          status.textContent = Homey.__('settings.name_saved');
         }));
         remove.addEventListener('click', () => {
           Homey.confirm(Homey.__('settings.confirm_remove'), (err, confirmed) => {
