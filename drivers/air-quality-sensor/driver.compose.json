@@ -1,7 +1,7 @@
 {
   "name": {
-    "en": "ALPSTUGA Air Quality Monitor",
-    "sv": "ALPSTUGA Luftkvalitetsmätare"
+    "en": "Temperature Sensor",
+    "sv": "Temperature Sensor"
   },
   "class": "sensor",
   "capabilities": [

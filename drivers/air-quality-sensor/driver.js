@@ -13,21 +13,34 @@ module.exports = class DirigeraAirQualitySensorDriver extends DirigeraDriver {
     const devices = await this.homey.app.getDevices();
     const sensors = new Map();
     for (const device of devices) {
-      const attributes = device.attributes || {};
-      if (device.deviceType !== 'environmentSensor'
-          || (attributes.productCode !== 'E2495' && !/^ALPSTUGA(?:\s|$)/i.test(attributes.model || ''))) {
-        continue;
-      }
-
+      if (device.deviceType !== 'environmentSensor') continue;
       const id = this.getIdFromDevice(device);
-      if (!sensors.has(id)) {
-        sensors.set(id, {
-          data: { id },
-          name: attributes.customName || attributes.model || 'ALPSTUGA',
-          capabilities: ['measure_co2', 'measure_pm25', 'measure_temperature', 'measure_humidity'],
-        });
-      }
+      if (!sensors.has(id)) sensors.set(id, []);
+      sensors.get(id).push(device);
     }
-    return Array.from(sensors.values()).sort(Utils._compareHomeyDevice);
+
+    const pairable = [];
+    for (const [id, endpoints] of sensors) {
+      const alpstuga = endpoints.find(({ attributes = {} }) => (
+        attributes.productCode === 'E2495' || /^ALPSTUGA(?:\s|$)/i.test(attributes.model || '')
+      ));
+      const timmerflotte = endpoints.find(({ attributes = {} }) => (
+        attributes.productCode === 'E2314' || /^TIMMERFLOTTE(?:\s|$)/i.test(attributes.model || '')
+      ));
+      if (!alpstuga && !timmerflotte) continue;
+
+      const device = alpstuga || endpoints.find(({ attributes }) => attributes?.customName) || timmerflotte;
+      const { customName, model } = device.attributes || {};
+      const capabilities = alpstuga
+        ? ['measure_co2', 'measure_pm25', 'measure_temperature', 'measure_humidity']
+        : ['measure_temperature', 'measure_humidity', 'measure_battery'];
+      pairable.push({
+        data: { id },
+        name: customName || model || (alpstuga ? 'ALPSTUGA' : 'TIMMERFLOTTE'),
+        icon: alpstuga ? '/icon.svg' : '/timmerflotte.svg',
+        capabilities,
+      });
+    }
+    return pairable.sort(Utils._compareHomeyDevice);
   }
 };

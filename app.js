@@ -74,7 +74,8 @@ class IkeaDirigeraGatewayApp extends Homey.App {
             const device = self.getDeviceFromUpdate(updateEvent);
             if (device === null) { return }
             const id = device.getData().id;
-            const newStatus = await self.getDevice(updateEvent.data.id).catch(this.handleError);
+            const statusId = updateEvent.data.deviceType === 'environmentSensor' ? id : updateEvent.data.id;
+            const newStatus = await self.getDevice(statusId).catch(this.handleError);
             if (device instanceof DirigeraDevice && newStatus !== null) {
               if (this._debugLoggingEnabled) {
                 this.log(`Updating device ${device.getName()} (${id}) with new status: ${JSON.stringify(newStatus)}`);
@@ -89,31 +90,22 @@ class IkeaDirigeraGatewayApp extends Homey.App {
   }
 
   getDeviceFromUpdate(updateEvent) {
-    const id = updateEvent.data.id;
-    const driver = this.getDriverForType(updateEvent.data.type, updateEvent.data.deviceType);
-    let device = null;
-    if (driver != null) {
+    const { id, type, deviceType, relationId } = updateEvent.data;
+    const driver = this.getDriverForType(type, deviceType);
+    if (!driver) return null;
+
+    const ids = [id];
+    if (deviceType === 'environmentSensor' && typeof relationId === 'string') ids.push(relationId);
+    if (typeof id === 'string' && id.includes('_')) ids.push(id.split('_', 1)[0]);
+    for (const candidate of new Set(ids)) {
       try {
-        device = driver.getDevice({
-          id: id,
-        });
-      } catch (e) {
-        device = null;
+        const device = driver.getDevice({ id: candidate });
+        if (device) return device;
+      } catch {
+        // Try the next candidate when this endpoint has no paired device.
       }
     }
-    if (!device && typeof id === 'string' && id.includes('_')) {
-      const baseId = id.split('_', 1)[0];
-      if (driver != null) {
-        try {
-          device = driver.getDevice({
-            id: baseId,
-          });
-        } catch (e) {
-          device = null;
-        }
-      }
-    }
-    return device;
+    return null;
   }
 
   isGatewayConnected() {
@@ -177,9 +169,6 @@ class IkeaDirigeraGatewayApp extends Homey.App {
         if (deviceType === 'openCloseSensor') {
           driverId = 'door-window-sensor';
         }
-        if (deviceType === 'environmentSensor') {
-          driverId = 'air-quality-sensor';
-        }
         break;
     }
     // Matter based sensors (MYGGSPRAY) are reported as an occupancySensor plus a
@@ -189,6 +178,9 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     }
     if (deviceType === 'occupancySensor' || deviceType === 'lightSensor') {
       driverId = 'motion-sensor';
+    }
+    if (deviceType === 'environmentSensor') {
+      driverId = 'air-quality-sensor';
     }
     if (driverId != null) {
       return this.homey.drivers.getDriver(driverId);
