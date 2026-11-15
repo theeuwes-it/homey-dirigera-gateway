@@ -50,6 +50,7 @@ Module._load = function loadMock(name, ...args) {
   return load.call(this, name, ...args);
 };
 const App = require('../app');
+const api = require('../api');
 const Light = require('../drivers/light/device');
 const LightDriver = require('../drivers/light/driver');
 Module._load = load;
@@ -118,6 +119,30 @@ test('migrates existing settings once and keeps existing Homey device identifier
   const restarted = await createApp(settings);
   assert.deepEqual(restarted.app.getHubs(), []);
   await restarted.app.onUninit();
+});
+
+test('returns the empty hub list before associated device updates finish', async () => {
+  const settings = { hubs: [otherHub] };
+  const { app, devices } = await createApp(settings);
+  const connection = app.getHubConnection(otherHub.id);
+  const lightDevice = new Light();
+  lightDevice.homey = { app };
+  lightDevice.getData = () => ({ id: otherHub.id + ':shared-id' });
+  let finishUpdate;
+  lightDevice.setUnavailable = () => new Promise(resolve => { finishUpdate = resolve; });
+  devices.push(lightDevice);
+
+  const result = await Promise.race([
+    api.removeHub({ homey: { app }, body: { hub_id: otherHub.id } }),
+    new Promise(resolve => setImmediate(() => resolve('waiting for device update'))),
+  ]);
+
+  assert.deepEqual(result, { hubs: [] });
+  assert.deepEqual(settings.hubs, []);
+  assert.equal(connection.socket.closed, true);
+  assert.equal(typeof finishUpdate, 'function');
+  finishUpdate();
+  await app.onUninit();
 });
 
 test('saves a new hub name without changing its ID, token or connection', async () => {

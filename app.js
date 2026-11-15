@@ -80,7 +80,11 @@ class IkeaDirigeraGatewayApp extends Homey.App {
     this.saveHubs(Array.from(this.hubs.values(), entry => entry.hub).filter(hub => hub.id !== id));
     this.hubs.delete(id);
     connection.close();
-    await Promise.all(devices.map(device => device.setUnavailable('DIRIGERA hub removed')));
+    for (const device of devices) {
+      Promise.resolve()
+        .then(() => device.setUnavailable('DIRIGERA hub removed'))
+        .catch(err => this.error('Could not mark DIRIGERA device unavailable', err));
+    }
     return this.getHubs();
   }
 

@@ -3,12 +3,76 @@
   <head>
     <script src="/homey.js" data-origin="settings"></script>
     <style>
-      .hub-field-action {
-        margin-top: 8px;
+      body > .settings-controls {
+        border: 0;
+        margin: 0;
+        padding: 0;
+        min-width: 0;
       }
 
-      .hub-field-action > button {
+      .settings-row,
+      .settings-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .settings-row > input {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .settings-actions {
+        flex-wrap: wrap;
+      }
+
+      .settings-controls button.settings-button {
         position: static;
+        flex: 0 0 auto;
+        width: auto;
+        margin: 0;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 6px;
+        background: #0055c9;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .settings-controls button.settings-button:disabled {
+        opacity: .55;
+        cursor: default;
+      }
+
+      .settings-controls [hidden] {
+        display: none !important;
+      }
+
+      .settings-divider {
+        margin: 16px 0;
+        border: 0;
+        border-top: 1px solid currentColor;
+        opacity: .25;
+      }
+
+      #status:not(:empty) {
+        margin: 8px 0 12px;
+        padding: 10px 12px;
+        border-radius: 6px;
+      }
+
+      #status[data-result="success"] {
+        background: #dcfce7;
+        color: #14532d;
+      }
+
+      #status[data-result="error"] {
+        background: #fee2e2;
+        color: #7f1d1d;
+      }
+
+      #status:empty {
+        margin: 0;
       }
 
       #pairingPrompt {
@@ -25,58 +89,72 @@
     </style>
   </head>
   <body>
-    <header class="homey-header">
-      <h1 class="homey-title" data-i18n="settings.title"></h1>
-      <p class="homey-subtitle" data-i18n="settings.subtitle"></p>
-    </header>
-
-    <fieldset class="homey-form-fieldset" id="hubSettings">
-      <legend class="homey-form-legend" data-i18n="settings.legend_gateway_settings"></legend>
-      <div class="homey-form-group">
-        <label class="homey-form-label" for="hub" data-i18n="settings.field_hub"></label>
-        <select class="homey-form-select" id="hub"></select>
-      </div>
-      <div class="homey-form-group">
-        <label class="homey-form-label" for="hubName" data-i18n="settings.field_hub_name"></label>
-        <input class="homey-form-input" id="hubName" type="text" />
-        <div class="hub-field-action" id="saveNameAction" hidden>
-          <button type="button" id="saveName" class="homey-button-secondary" data-i18n="settings.button_save_name"></button>
+    <fieldset class="settings-controls" id="settingsControls">
+      <fieldset class="homey-form-fieldset">
+        <legend class="homey-form-legend" data-i18n="settings.legend_gateway_settings"></legend>
+        <p id="status" role="status" aria-atomic="true"></p>
+        <p id="pairingPrompt" role="alert" hidden></p>
+        <div class="homey-form-group">
+          <label class="homey-form-label" for="hub" data-i18n="settings.field_hub"></label>
+          <select class="homey-form-select" id="hub"></select>
         </div>
-      </div>
-      <div class="homey-form-group">
-        <label class="homey-form-label" for="ipAddress" data-i18n="settings.field_ip_address"></label>
-        <input class="homey-form-input" id="ipAddress" type="text" />
-        <div class="hub-field-action">
-          <button type="button" id="discover" class="homey-button-secondary" data-i18n="settings.button_discover"></button>
+        <div class="homey-form-group">
+          <label class="homey-form-label" for="hubName" data-i18n="settings.field_hub_name"></label>
+          <div class="settings-row">
+            <input class="homey-form-input" id="hubName" type="text" />
+            <button type="button" id="saveName" class="settings-button" data-i18n="settings.button_save_name"></button>
+          </div>
         </div>
-      </div>
-      <button type="button" id="authenticate" class="homey-button-primary-full"></button>
-      <div class="hub-field-action" id="removeAction" hidden>
-        <button type="button" id="remove" class="homey-button-secondary" data-i18n="settings.button_remove"></button>
-      </div>
-      <p id="pairingPrompt" role="alert" hidden></p>
-      <p id="status" role="status"></p>
-    </fieldset>
+        <div class="settings-actions" id="hubActions">
+          <button type="button" id="remove" class="settings-button" data-i18n="settings.button_remove"></button>
+          <button type="button" id="reauthenticate" class="settings-button" data-i18n="settings.button_restart_authentication"></button>
+        </div>
+        <div id="removeConfirmation" hidden>
+          <p data-i18n="settings.confirm_remove"></p>
+          <div class="settings-actions">
+            <button type="button" id="confirmRemove" class="settings-button" data-i18n="settings.button_confirm_remove"></button>
+            <button type="button" id="cancelRemove" class="settings-button" data-i18n="settings.button_cancel_remove"></button>
+          </div>
+        </div>
+      </fieldset>
 
-    <fieldset class="homey-form-fieldset">
-      <legend class="homey-form-legend" data-i18n="settings.legend_debugging"></legend>
-      <div class="homey-form-group">
-        <label class="homey-form-label" for="debugLogging" data-i18n="settings.field_debugging"></label>
-        <input class="homey-form-input" id="debugLogging" type="checkbox" />
-      </div>
+      <hr class="settings-divider" />
+
+      <fieldset class="homey-form-fieldset">
+        <legend class="homey-form-legend" data-i18n="settings.add_hub"></legend>
+        <div class="homey-form-group">
+          <label class="homey-form-label" for="ipAddress" data-i18n="settings.field_ip_address"></label>
+          <div class="settings-row">
+            <input class="homey-form-input" id="ipAddress" type="text" inputmode="decimal" />
+            <button type="button" id="discover" class="settings-button" data-i18n="settings.button_discover"></button>
+          </div>
+        </div>
+        <button type="button" id="addHub" class="settings-button" data-i18n="settings.add_hub"></button>
+      </fieldset>
+
+      <hr class="settings-divider" />
+
+      <fieldset class="homey-form-fieldset">
+        <legend class="homey-form-legend" data-i18n="settings.legend_debugging"></legend>
+        <label>
+          <input id="debugLogging" type="checkbox" />
+          <span data-i18n="settings.field_debugging"></span>
+        </label>
+      </fieldset>
     </fieldset>
 
     <script>
       function onHomeyReady(Homey) {
         const get = id => document.getElementById(id);
-        const settings = get('hubSettings');
+        const settings = get('settingsControls');
         const select = get('hub');
         const name = get('hubName');
         const ip = get('ipAddress');
         const status = get('status');
         const pairingPrompt = get('pairingPrompt');
-        const authenticate = get('authenticate');
         const remove = get('remove');
+        const hubActions = get('hubActions');
+        const confirmation = get('removeConfirmation');
         const debug = get('debugLogging');
         let hubs = [];
 
@@ -86,61 +164,83 @@
           });
         }
 
+        function showStatus(message, result) {
+          status.dataset.result = result;
+          status.textContent = message;
+          if (message) status.scrollIntoView({ block: 'nearest' });
+        }
+
+        function setConfirmation(visible) {
+          confirmation.hidden = !visible;
+          hubActions.hidden = visible;
+        }
+
+        function selectedHub() {
+          return hubs.find(hub => hub.id === select.value);
+        }
+
         function selectHub() {
-          const hub = hubs.find(entry => entry.id === select.value);
-          name.value = hub ? hub.name : '';
-          ip.value = hub ? hub.ipAddress : '';
-          authenticate.textContent = Homey.__(hub ? 'settings.button_restart_authentication' : 'settings.button_authenticate');
-          get('removeAction').hidden = !hub;
-          get('saveNameAction').hidden = !hub;
-          status.textContent = '';
+          const hub = selectedHub();
+          name.value = hub?.name || '';
+          for (const control of [select, name, get('saveName'), remove, get('reauthenticate')]) {
+            control.disabled = !hub;
+          }
+          setConfirmation(false);
         }
 
         function showHubs(newHubs, selectedId) {
           if (!Array.isArray(newHubs)) throw new Error(Homey.__('settings.hub_list_unavailable'));
           hubs = newHubs;
-          select.replaceChildren(new Option(Homey.__('settings.add_hub'), ''));
+          select.replaceChildren();
           for (const hub of hubs) select.add(new Option(hub.name + ' (' + hub.ipAddress + ')', hub.id));
-          select.value = selectedId || '';
+          if (!hubs.length) select.add(new Option(Homey.__('settings.no_hubs'), ''));
+          select.value = hubs.some(hub => hub.id === selectedId) ? selectedId : (hubs[0]?.id || '');
           selectHub();
         }
 
         async function run(action) {
+          if (settings.disabled) return;
           settings.disabled = true;
-          status.textContent = '';
+          showStatus('', '');
           try {
             await action();
           } catch (err) {
-            status.textContent = err.message || String(err);
+            showStatus(err.message || String(err), 'error');
           } finally {
             settings.disabled = false;
           }
         }
 
-        select.addEventListener('change', selectHub);
+        select.addEventListener('change', () => {
+          selectHub();
+          showStatus('', '');
+        });
         get('discover').addEventListener('click', () => run(async () => {
           const result = await api('GET', '/');
           if (!result || !result.data) throw new Error(Homey.__('settings.discover_not_found'));
           ip.value = result.data;
+          showStatus(Homey.__('settings.hub_discovered'), 'success');
         }));
-        authenticate.addEventListener('click', () => run(async () => {
-          const ipAddress = ip.value.trim();
+
+        async function authenticate(hub) {
           const session = await api('POST', '/', {
-            hub_id: select.value || null,
-            name: name.value,
-            ip_address: ipAddress,
+            hub_id: hub?.id || null,
+            name: hub?.name,
+            ip_address: hub?.ipAddress || ip.value.trim(),
           });
           if (!session?.sessionId) throw new Error(Homey.__('settings.authentication_unconfirmed'));
 
           pairingPrompt.textContent = Homey.__('settings.press_action_button');
           pairingPrompt.hidden = false;
+          pairingPrompt.scrollIntoView({ block: 'nearest' });
           try {
             const deadline = Date.now() + 60000;
             while (Date.now() < deadline) {
               const result = await api('POST', '/getAccessToken', { session_id: session.sessionId });
               if (result?.hubId && Array.isArray(result.hubs)) {
                 showHubs(result.hubs, result.hubId);
-                status.textContent = Homey.__('settings.title_authenticated');
+                if (!hub) ip.value = '';
+                showStatus(Homey.__('settings.title_authenticated'), 'success');
                 return;
               }
               await new Promise(resolve => setTimeout(resolve, 1000));
@@ -149,32 +249,53 @@
           } finally {
             pairingPrompt.hidden = true;
           }
-        }));
+        }
+
+        get('addHub').addEventListener('click', () => run(() => authenticate()));
+        get('reauthenticate').addEventListener('click', () => run(() => authenticate(selectedHub())));
         get('saveName').addEventListener('click', () => run(async () => {
           const selectedId = select.value;
           const newHubs = await api('POST', '/renameHub', { hub_id: selectedId, name: name.value });
           showHubs(newHubs, selectedId);
-          status.textContent = Homey.__('settings.name_saved');
+          showStatus(Homey.__('settings.name_saved'), 'success');
         }));
         remove.addEventListener('click', () => {
-          Homey.confirm(Homey.__('settings.confirm_remove'), (err, confirmed) => {
-            if (err) return Homey.alert(err);
-            if (confirmed) run(async () => {
-              showHubs(await api('POST', '/removeHub', { hub_id: select.value }));
-            });
-          });
+          showStatus('', '');
+          setConfirmation(true);
+          get('cancelRemove').focus();
         });
-        Homey.get('debugLogging', (err, enabled) => {
-          if (err) return Homey.alert(err);
-          debug.checked = Boolean(enabled);
+        get('cancelRemove').addEventListener('click', () => {
+          setConfirmation(false);
+          remove.focus();
         });
-        debug.addEventListener('change', () => {
-          api('POST', '/setdebugging', { debug_logging: debug.checked }).catch(err => Homey.alert(err));
-        });
+        get('confirmRemove').addEventListener('click', () => run(async () => {
+          const hubId = select.value;
+          setConfirmation(false);
+          const result = await api('POST', '/removeHub', { hub_id: hubId });
+          const remaining = result?.hubs || await api('GET', '/hubs');
+          showHubs(remaining);
+          if (hubs.some(hub => hub.id === hubId)) {
+            throw new Error(Homey.__('settings.removal_unconfirmed'));
+          }
+          showStatus(Homey.__('settings.hub_removed'), 'success');
+        }));
+        debug.addEventListener('change', () => run(async () => {
+          const enabled = debug.checked;
+          try {
+            await api('POST', '/setdebugging', { debug_logging: enabled });
+            showStatus(Homey.__('settings.debugging_saved'), 'success');
+          } catch (err) {
+            debug.checked = !enabled;
+            throw err;
+          }
+        }));
         Homey.ready();
         run(async () => {
           const saved = await api('GET', '/hubs');
-          showHubs(saved, saved?.[0]?.id);
+          showHubs(saved);
+          debug.checked = Boolean(await new Promise((resolve, reject) => {
+            Homey.get('debugLogging', (err, enabled) => err ? reject(err) : resolve(enabled));
+          }));
         });
       }
     </script>

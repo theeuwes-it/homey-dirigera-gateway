@@ -17,7 +17,7 @@ module.exports = {
     },
 
     async removeHub({homey, body}) {
-        return homey.app.removeHub(body.hub_id);
+        return { hubs: await homey.app.removeHub(body.hub_id) };
     },
 
     async startAuthenticationProcess({homey, body}) {
