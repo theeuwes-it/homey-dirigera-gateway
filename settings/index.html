@@ -10,6 +10,18 @@
       .hub-field-action > button {
         position: static;
       }
+
+      #pairingPrompt {
+        margin: 12px 0;
+        padding: 14px;
+        border: 1px solid #b45309;
+        border-radius: 8px;
+        background: #fed7aa;
+        color: #431407;
+        font-size: 1.125rem;
+        font-weight: 700;
+        line-height: 1.4;
+      }
     </style>
   </head>
   <body>
@@ -42,6 +54,7 @@
       <div class="hub-field-action" id="removeAction" hidden>
         <button type="button" id="remove" class="homey-button-secondary" data-i18n="settings.button_remove"></button>
       </div>
+      <p id="pairingPrompt" role="alert" hidden></p>
       <p id="status" role="status"></p>
     </fieldset>
 
@@ -61,6 +74,7 @@
         const name = get('hubName');
         const ip = get('ipAddress');
         const status = get('status');
+        const pairingPrompt = get('pairingPrompt');
         const authenticate = get('authenticate');
         const remove = get('remove');
         const debug = get('debugLogging');
@@ -83,6 +97,7 @@
         }
 
         function showHubs(newHubs, selectedId) {
+          if (!Array.isArray(newHubs)) throw new Error(Homey.__('settings.hub_list_unavailable'));
           hubs = newHubs;
           select.replaceChildren(new Option(Homey.__('settings.add_hub'), ''));
           for (const hub of hubs) select.add(new Option(hub.name + ' (' + hub.ipAddress + ')', hub.id));
@@ -110,15 +125,30 @@
         }));
         authenticate.addEventListener('click', () => run(async () => {
           const ipAddress = ip.value.trim();
-          const { sessionId } = await api('POST', '/', {
+          const session = await api('POST', '/', {
             hub_id: select.value || null,
             name: name.value,
             ip_address: ipAddress,
           });
-          status.textContent = Homey.__('settings.press_action_button');
-          const newHubs = await api('POST', '/getAccessToken', { session_id: sessionId });
-          showHubs(newHubs, newHubs.find(hub => hub.ipAddress === ipAddress)?.id);
-          status.textContent = Homey.__('settings.title_authenticated');
+          if (!session?.sessionId) throw new Error(Homey.__('settings.authentication_unconfirmed'));
+
+          pairingPrompt.textContent = Homey.__('settings.press_action_button');
+          pairingPrompt.hidden = false;
+          try {
+            const deadline = Date.now() + 60000;
+            while (Date.now() < deadline) {
+              const result = await api('POST', '/getAccessToken', { session_id: session.sessionId });
+              if (result?.hubId && Array.isArray(result.hubs)) {
+                showHubs(result.hubs, result.hubId);
+                status.textContent = Homey.__('settings.title_authenticated');
+                return;
+              }
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            throw new Error(Homey.__('settings.authentication_unconfirmed'));
+          } finally {
+            pairingPrompt.hidden = true;
+          }
         }));
         get('saveName').addEventListener('click', () => run(async () => {
           const selectedId = select.value;
@@ -144,7 +174,7 @@
         Homey.ready();
         run(async () => {
           const saved = await api('GET', '/hubs');
-          showHubs(saved, saved[0]?.id);
+          showHubs(saved, saved?.[0]?.id);
         });
       }
     </script>

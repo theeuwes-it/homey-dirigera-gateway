@@ -37,8 +37,13 @@ class Client {
   }
 }
 
+let authenticationToken;
 const load = Module._load;
 Module._load = function loadMock(name, ...args) {
+  if (name === './lib/hub-authentication') return {
+    startAuthentication: async () => ({ code: 'code', verifier: 'verifier' }),
+    getAccessToken: async () => authenticationToken,
+  };
   if (name === 'homey') return { App: class {}, Device: class {}, Driver: class {} };
   if (name === 'dirigera-simple') return { Dirigera: Client };
   if (name === 'reconnecting-websocket') return Socket;
@@ -77,6 +82,28 @@ async function createApp(settings) {
   await app.onInit();
   return { app, driver, devices };
 }
+
+test('polls for the action button and saves the hub only once if the response is retried', async () => {
+  const settings = { hubs: [] };
+  const { app } = await createApp(settings);
+  const { sessionId } = await app.startAuthenticationProcess({
+    ip_address: otherHub.ipAddress,
+    name: otherHub.name,
+  });
+
+  authenticationToken = null;
+  assert.deepEqual(await app.finishAuthentication(sessionId), { pending: true });
+  assert.deepEqual(settings.hubs, []);
+  authenticationToken = otherHub.accessToken;
+  const result = await app.finishAuthentication(sessionId);
+  const connection = app.getHubConnection(result.hubId);
+  assert.equal(result.hubs[0].name, otherHub.name);
+  assert.equal(result.hubs[0].accessToken, undefined);
+  assert.deepEqual(await app.finishAuthentication(sessionId), result);
+  assert.equal(app.getHubConnection(result.hubId), connection);
+  assert.equal(settings.hubs.length, 1);
+  await app.onUninit();
+});
 
 test('migrates existing settings once and keeps existing Homey device identifiers', async () => {
   const settings = { ipAddress: '192.168.0.10', accessToken: 'legacy-token' };

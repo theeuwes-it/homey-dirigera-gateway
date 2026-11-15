@@ -94,7 +94,7 @@ class IkeaDirigeraGatewayApp extends Homey.App {
       throw new Error('A DIRIGERA hub with this IP address is already configured');
     }
     if (Array.from(this.authentications.values()).some(session => (
-      session.hub.id === id || session.hub.ipAddress === ipAddress
+      !session.completed && (session.hub.id === id || session.hub.ipAddress === ipAddress)
     ))) {
       throw new Error('Authentication is already in progress for this hub');
     }
@@ -114,14 +114,20 @@ class IkeaDirigeraGatewayApp extends Homey.App {
 
   async finishAuthentication(sessionId) {
     const session = this.authentications.get(sessionId);
-    if (!session || !session.credentials || session.finishing) {
+    if (!session || !session.credentials) {
       throw new Error('Start a new DIRIGERA authentication session');
     }
+    // Keep the result until the session expires so a lost response can be retried.
+    if (session.completed) return { hubId: session.hub.id, hubs: this.getHubs() };
+    if (session.finishing) return { pending: true };
     session.finishing = true;
-    this.homey.clearTimeout(session.timer);
     const { hub, previous } = session;
     try {
       const accessToken = await getAccessToken(hub.ipAddress, session.credentials);
+      if (!accessToken) return { pending: true };
+      if (this.authentications.get(sessionId) !== session) {
+        throw new Error('DIRIGERA authentication expired. Try again.');
+      }
       if (this.findHubByAddress(hub.ipAddress, hub.id)
           || (previous && this.hubs.get(hub.id) !== previous)) {
         throw new Error('Hub settings changed during authentication. Try again.');
@@ -130,9 +136,14 @@ class IkeaDirigeraGatewayApp extends Homey.App {
       const otherHubs = Array.from(this.hubs.values(), entry => entry.hub).filter(entry => entry.id !== hub.id);
       this.saveHubs([...otherHubs, updated]);
       this.connectHub(updated);
-      return this.getHubs();
-    } finally {
+      session.completed = true;
+      return { hubId: hub.id, hubs: this.getHubs() };
+    } catch (err) {
+      this.homey.clearTimeout(session.timer);
       this.authentications.delete(sessionId);
+      throw err;
+    } finally {
+      session.finishing = false;
     }
   }
 
